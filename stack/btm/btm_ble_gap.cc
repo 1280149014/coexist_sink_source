@@ -1801,7 +1801,7 @@ void btm_ble_process_ext_adv_pkt(uint8_t data_len, uint8_t* data) {
 
   /* Extract the number of reports in this event. */
   STREAM_TO_UINT8(num_reports, p);
-
+  BTM_TRACE_ERROR("btm_ble_process_ext_adv_pkt 1111");
   while (num_reports--) {
     if (p > data + data_len) {
       // TODO(jpawlowski): we should crash the stack here
@@ -1857,7 +1857,7 @@ void btm_ble_process_adv_pkt(uint8_t data_len, uint8_t* data) {
   uint8_t* p = data;
   uint8_t legacy_evt_type, addr_type, num_reports, pkt_data_len;
   int8_t rssi;
-
+  BTM_TRACE_ERROR("btm_ble_process_adv_pkt 1111");
   /* Only process the results if the inquiry is still active */
   if (!BTM_BLE_IS_SCAN_ACTIVE(btm_cb.ble_ctr_cb.scan_activity)) return;
 
@@ -1971,7 +1971,7 @@ void btm_ble_process_adv_pkt_cont(uint16_t evt_type, uint8_t addr_type,
   if (is_active_scan && is_scannable && !is_scan_resp) {
     // If we didn't receive scan response yet, don't report the device.
     LOG(ERROR) << " Waiting for scan response " << bda;
-    return;
+    //return;
   }
 
   if (!AdvertiseDataParser::IsValid(adv_data)) {

@@ -1493,6 +1493,23 @@ static void btif_dm_search_services_evt(uint16_t event, char* p_param) {
         HAL_CBACK(bt_hal_cbacks, remote_device_properties_cb, BT_STATUS_SUCCESS,
                   &bd_addr, 1, &prop);
       }
+        LOG_INFO(LOG_TAG, "%s index: ylq s", __func__);
+        /* Remote name update */
+        if (strnlen((const char*)p_data->disc_res.bd_name, BD_NAME_LEN)) {
+          LOG_INFO(LOG_TAG, "%s Remote name update", __func__);
+          bt_property_t prop;
+          prop.type = BT_PROPERTY_BDNAME;
+          prop.val = p_data->disc_res.bd_name;
+          prop.len =
+              strnlen((char*)p_data->disc_res.bd_name, BD_NAME_LEN);
+
+          ret = btif_storage_set_remote_device_property(&bd_addr, &prop);
+          ASSERTC(ret == BT_STATUS_SUCCESS,
+                  "failed to save remote device property", ret);
+          /* Send the event to the BTIF */
+          HAL_CBACK(bt_hal_cbacks, remote_device_properties_cb,
+                    BT_STATUS_SUCCESS, &bd_addr, 1, &prop);
+        }
     } break;
 
     case BTA_DM_DISC_CMPL_EVT:
@@ -3101,7 +3118,7 @@ static void btif_dm_ble_passkey_req_evt(tBTA_DM_PIN_REQ* p_pin_req) {
 }
 static void btif_dm_ble_key_nc_req_evt(tBTA_DM_SP_KEY_NOTIF* p_notif_req) {
   /* TODO implement key notification for numeric comparison */
-  BTIF_TRACE_DEBUG("%s", __func__);
+  BTIF_TRACE_DEBUG("%s, p_notif_req->bd_name = %s", __func__, p_notif_req->bd_name);
 
   /* Remote name update */
   btif_update_remote_properties(p_notif_req->bd_addr, p_notif_req->bd_name,
