@@ -185,6 +185,14 @@ static void bta_create_pse_sdp_record(bluetooth_sdp_record* record,
   if (p_attr != NULL) {
     record->pse.hdr.l2cap_psm = p_attr->attr_value.v.u16;
   }
+   APPL_TRACE_ERROR("%s() record->pse.hdr.type = %x", __func__, record->pse.hdr.type);
+  APPL_TRACE_ERROR("%s() record->pse.hdr.service_name_length = %x", __func__, record->pse.hdr.service_name_length);
+  APPL_TRACE_ERROR("%s() record->pse.hdr.service_name = %s", __func__, record->pse.hdr.service_name ? record->pse.hdr.service_name : "NULL");
+  APPL_TRACE_ERROR("%s() record->pse.hdr.rfcomm_channel_number = %x", __func__, record->pse.hdr.rfcomm_channel_number);
+  APPL_TRACE_ERROR("%s() record->pse.hdr.l2cap_psm = %x", __func__, record->pse.hdr.l2cap_psm);
+  APPL_TRACE_ERROR("%s() record->pse.hdr.profile_version = %x", __func__, record->pse.hdr.profile_version);
+  APPL_TRACE_ERROR("%s() record->pse.supported_features = %x", __func__, record->pse.supported_features);
+  APPL_TRACE_ERROR("%s() record->pse.supported_repositories = %x", __func__, record->pse.supported_repositories);
 }
 
 static void bta_create_ops_sdp_record(bluetooth_sdp_record* record,

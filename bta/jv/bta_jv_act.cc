@@ -1353,7 +1353,9 @@ void bta_jv_rfcomm_connect(tBTA_SEC sec_mask, tBTA_JV_ROLE role,
                << " is zero or BTM_SetSecurityLevel failed, remote_scn:"
                << +remote_scn;
   }
-
+  LOG(ERROR) << __func__ << ": sec_id=" << +sec_id
+               << " BTM_SetSecurityLevel failed, remote_scn:"
+               << +remote_scn;
   if (evt_data.status == BTA_JV_SUCCESS &&
       RFCOMM_CreateConnection(UUID_SERVCLASS_SERIAL_PORT, remote_scn, false,
                               BTA_JV_DEF_RFC_MTU, peer_bd_addr, &handle,

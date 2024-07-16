@@ -197,7 +197,8 @@ static bt_status_t btsock_connect(const RawAddress* bd_addr, btsock_type_t type,
                                   int flags, int app_uid) {
   CHECK(bd_addr != NULL);
   CHECK(sock_fd != NULL);
-
+  LOG_DEBUG(LOG_TAG, "%s: type=%x, channel=0x%x, flags=0x%x",
+                __func__, type, channel, flags);
   *sock_fd = INVALID_FD;
   bt_status_t status = BT_STATUS_FAIL;
 

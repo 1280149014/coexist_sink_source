@@ -538,6 +538,10 @@ tBTA_JV_STATUS BTA_JvRfcommConnect(tBTA_SEC sec_mask, tBTA_JV_ROLE role,
                                    tBTA_JV_RFCOMM_CBACK* p_cback,
                                    uint32_t rfcomm_slot_id) {
   LOG(ERROR) << __func__;
+  LOG(ERROR) << __func__<< "remote_scn =" << remote_scn;
+  LOG(ERROR) << __func__<< " rfcomm_slot_id = " << rfcomm_slot_id;
+  LOG(ERROR) << __func__<< " role = " << role;
+  LOG(ERROR) << __func__<< " sec_mask = " << sec_mask;
 
   if (!p_cback) return BTA_JV_FAILURE; /* Nothing to do */
 

@@ -884,6 +884,8 @@ static bt_status_t btsock_l2cap_listen_or_connect(const char* name,
                                                   int channel, int* sock_fd,
                                                   int flags, char listen,
                                                   int app_uid) {
+  //LOG_ERROR(LOG_TAG, "%s ", __func__);
+  LOG(ERROR) << __func__ << ", channel = "<< channel;
   int fixed_chan = 1;
   bool is_le_coc = false;
 
