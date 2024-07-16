@@ -229,9 +229,7 @@ class StackA2dpTest : public ::testing::Test {
           // shared library installed.
           supported = has_shared_library(LDAC_DECODER_LIB_NAME);
           break;
-        case 
-        
-         :
+        case BTAV_A2DP_CODEC_INDEX_MAX:
           // Needed to avoid using "default:" case so we can capture when
           // a new codec is added, and it can be included here.
           break;

@@ -115,7 +115,11 @@ int RFCOMM_CreateConnection(uint16_t uuid, uint8_t scn, bool is_server,
                << ", uuid=" << loghex(uuid);
     return (PORT_INVALID_SCN);
   }
-
+    LOG(ERROR) << __func__ << ": valid SCN, bd_addr=" << bd_addr
+               << ", scn=" << static_cast<int>(scn)
+               << ", is_server=" << is_server
+               << ", mtu=" << static_cast<int>(mtu)
+               << ", uuid=" << loghex(uuid);
   // For client that originates connection on the existing none initiator
   // multiplexer channel, DLCI should be odd.
   uint8_t dlci;
