@@ -2092,10 +2092,10 @@ uint8_t btm_proc_smp_cback(tSMP_EVT event, const RawAddress& bd_addr,
 
           if (res == BTM_SUCCESS) {
             p_dev_rec->sec_state = BTM_SEC_STATE_IDLE;
-#if (BLE_PRIVACY_SPT == TRUE)
+//#if (BLE_PRIVACY_SPT == TRUE)
             /* add all bonded device into resolving list if IRK is available*/
             btm_ble_resolving_list_load_dev(p_dev_rec);
-#endif
+//#endif
           }
 
           btm_sec_dev_rec_cback_event(p_dev_rec, res, true);
