@@ -723,9 +723,9 @@ void btif_a2dp_sink_set_audio_track_gain(float gain) {
   LOG_INFO(LOG_TAG, "%s: set gain to %f", __func__, gain);
   LockGuard lock(g_mutex);
 
-// #ifndef OS_GENERIC
+#ifndef OS_GENERIC
   BtifAvrcpSetAudioTrackGain(btif_a2dp_sink_cb.audio_track, gain);
-// #endif
+#endif
 }
 
 static void btif_a2dp_sink_clear_track_event_req() {

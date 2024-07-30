@@ -36,7 +36,7 @@
 #include "bta_av_api.h"
 #include "bta_av_int.h"
 #include "bta_sys.h"
-
+#include "btif/include/btif_av.h"
 #include "osi/include/allocator.h"
 #include "osi/include/log.h"
 
@@ -171,6 +171,17 @@ void BTA_AvOpen(const RawAddress& bd_addr, tBTA_AV_HNDL handle, bool use_rc,
   p_buf->sec_mask = sec_mask;
   p_buf->switch_res = BTA_AV_RS_NONE;
   p_buf->uuid = uuid;
+  if (btif_av_src_sink_coexist_enabled()) {
+    if (p_buf->uuid == AVDT_TSEP_SRC) {
+      p_buf->uuid = UUID_SERVCLASS_AUDIO_SOURCE;
+      p_buf->incoming = TRUE;
+    } else if (p_buf->uuid == AVDT_TSEP_SNK) {
+      p_buf->uuid = UUID_SERVCLASS_AUDIO_SINK;
+      p_buf->incoming = TRUE;
+    } else {
+      p_buf->incoming = FALSE;
+    }
+  }
 
   bta_sys_sendmsg(p_buf);
 }
@@ -622,5 +633,25 @@ void BTA_AvMetaCmd(uint8_t rc_handle, uint8_t label, tBTA_AV_CMD cmd_code,
   p_buf->is_rsp = false;
   p_buf->label = label;
 
+  bta_sys_sendmsg(p_buf);
+}
+
+/*******************************************************************************
+ *
+ * Function         BTA_AvSetPeerSep
+ *
+ * Description      Set peer sep in order to delete wrong avrcp handle
+ *                  there are may be two avrcp handle at start, delete the
+ *                  wrong when a2dp connected
+ *
+ * Returns          void
+ *
+ ******************************************************************************/
+void BTA_AvSetPeerSep(const RawAddress& bdaddr, uint8_t sep) {
+  tBTA_AV_API_PEER_SEP* p_buf =
+      (tBTA_AV_API_PEER_SEP*)osi_malloc(sizeof(tBTA_AV_API_PEER_SEP));
+  p_buf->hdr.event = BTA_AV_API_PEER_SEP_EVT;
+  p_buf->addr = bdaddr;
+  p_buf->sep = sep;
   bta_sys_sendmsg(p_buf);
 }

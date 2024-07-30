@@ -85,6 +85,18 @@ bt_status_t btif_transfer_context(tBTIF_CBACK* p_cback, uint16_t event,
                                   tBTIF_COPY_CBACK* p_copy_cback) {
   return BT_STATUS_SUCCESS;
 }
+bool btif_av_src_sink_coexist_enabled() { return true; }
+bool btif_av_is_connected_addr(const RawAddress& peer_address) { return true; }
+bool btif_av_peer_is_connected_sink(const RawAddress& peer_address) {
+  return false;
+}
+bool btif_av_peer_is_connected_source(const RawAddress& peer_address) {
+  return true;
+}
+bool btif_av_peer_is_sink(const RawAddress& peer_address) { return false; }
+bool btif_av_peer_is_source(const RawAddress& peer_address) { return true; }
+bool btif_av_both_enable(void) { return true; }
+
 const char* dump_rc_event(uint8_t event) { return nullptr; }
 const char* dump_rc_notification_event_id(uint8_t event_id) { return nullptr; }
 const char* dump_rc_pdu(uint8_t pdu) { return nullptr; }

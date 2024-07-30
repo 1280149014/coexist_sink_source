@@ -42,10 +42,10 @@ const uint32_t bta_av_meta_caps_co_ids[] = {AVRC_CO_METADATA, AVRC_CO_BROADCOM};
 
 /* AVRCP supported categories */
 #define BTA_AV_RC_SUPF_CT (AVRC_SUPF_CT_CAT2)
-#define BTA_AVK_RC_SUPF_CT (AVRC_SUPF_CT_CAT1 |                     \
-                            AVRC_SUPF_CT_BROWSE |                   \
-                            AVRC_SUPF_CT_COVER_ART_GET_IMAGE_PROP | \
-                            AVRC_SUPF_CT_COVER_ART_GET_IMAGE)
+#define BTA_AVK_RC_SUPF_CT                   \
+  (AVRC_SUPF_CT_CAT1 | AVRC_SUPF_CT_BROWSE | \
+   AVRC_SUPF_CT_COVER_ART_GET_IMAGE_PROP | AVRC_SUPF_CT_COVER_ART_GET_IMAGE)
+#define BTA_AVK_RC_SUPF_CT_V15 (AVRC_SUPF_CT_CAT1 | AVRC_SUPF_CT_BROWSE)
 #define BTA_AVK_RC_SUPF_TG (AVRC_SUPF_TG_CAT2)
 
 /* AVRCP Controller and Targer default name */
@@ -131,7 +131,7 @@ const uint8_t bta_av_meta_caps_evt_ids_avrcp13[] = {
 
 /* This configuration to be used when we are Src + TG + CT( only for abs vol) */
 const tBTA_AV_CFG bta_av_cfg = {
-    BTA_AV_RC_COMP_ID,     /* AVRCP Company ID */
+    AVRC_CO_METADATA,     /* AVRCP Company ID */
     512,                   /* AVRCP MTU at L2CAP for control channel */
     BTA_AV_MAX_RC_BR_MTU,  /* AVRCP MTU at L2CAP for browsing channel */
     BTA_AV_RC_SUPF_CT,     /* AVRCP controller categories */
@@ -161,7 +161,7 @@ const tBTA_AV_CFG bta_avk_cfg = {
     AVRC_CO_METADATA,      /* AVRCP Company ID */
     512,                   /* AVRCP MTU at L2CAP for control channel */
     BTA_AV_MAX_RC_BR_MTU,  /* AVRCP MTU at L2CAP for browsing channel */
-    BTA_AVK_RC_SUPF_CT,    /* AVRCP controller categories */
+    BTA_AVK_RC_SUPF_CT_V15,    /* AVRCP controller categories */
     BTA_AVK_RC_SUPF_TG,    /* AVRCP target categories */
     672,                   /* AVDTP signaling channel MTU at L2CAP */
     MAX_3MBPS_AVDTP_MTU,   /* AVDTP audio transport channel MTU at L2CAP */
@@ -181,9 +181,12 @@ const tBTA_AV_CFG bta_avk_cfg = {
     {0},                       /* Default AVRCP target name */
 };
 
+const tBTA_AV_CFG* get_bta_avk_cfg() {
+    return &bta_avk_cfg;
+}
 /* This configuration to be used when we are using AVRCP1.3 */
 const tBTA_AV_CFG bta_av_cfg_compatibility = {
-    BTA_AV_RC_COMP_ID,     /* AVRCP Company ID */
+    AVRC_CO_METADATA,     /* AVRCP Company ID */
     512,                   /* AVRCP MTU at L2CAP for control channel */
     BTA_AV_MAX_RC_BR_MTU,  /* AVRCP MTU at L2CAP for browsing channel */
     BTA_AV_RC_SUPF_CT,     /* AVRCP controller categories */

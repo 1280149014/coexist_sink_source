@@ -601,7 +601,7 @@ static uint8_t avrc_proc_far_msg(uint8_t handle, uint8_t label, uint8_t cr,
     avrc_command.continu = avrc_cmd;
     status = AVRC_BldCommand(&avrc_command, &p_cmd);
     if (status == AVRC_STS_NO_ERROR) {
-      AVRC_MsgReq(handle, (uint8_t)(label), AVRC_CMD_CTRL, p_cmd);
+      AVRC_MsgReq(handle, (uint8_t)(label), AVRC_CMD_CTRL, p_cmd, false);
     }
   }
 
@@ -1100,7 +1100,7 @@ uint16_t AVRC_CloseBrowse(uint8_t handle) { return AVCT_RemoveBrowse(handle); }
  *
  *****************************************************************************/
 uint16_t AVRC_MsgReq(uint8_t handle, uint8_t label, uint8_t ctype,
-                     BT_HDR* p_pkt) {
+                     BT_HDR* p_pkt, bool is_new_avrcp) {
   uint8_t* p_data;
   uint8_t cr = AVCT_CMD;
   bool chk_frag = true;
@@ -1116,7 +1116,9 @@ uint16_t AVRC_MsgReq(uint8_t handle, uint8_t label, uint8_t ctype,
   AVRC_TRACE_DEBUG("%s handle = %u label = %u ctype = %u len = %d", __func__,
                    handle, label, ctype, p_pkt->len);
   /* Handle for AVRCP fragment */
-  bool is_new_avrcp = osi_property_get_bool("persist.bluetooth.enablenewavrcp", true);
+  //if(0) { //todo ylq
+    //bool is_new_avrcp = osi_property_get_bool("persist.bluetooth.enablenewavrcp", true);
+  //}
   if (ctype >= AVRC_RSP_NOT_IMPL) cr = AVCT_RSP;
 
   if (p_pkt->event == AVRC_OP_VENDOR) {
@@ -1334,4 +1336,13 @@ uint16_t AVRC_PassRsp(uint8_t handle, uint8_t label, tAVRC_MSG_PASS* p_msg) {
   p_buf = avrc_pass_msg(p_msg);
   if (p_buf) return AVCT_MsgReq(handle, label, AVCT_RSP, p_buf);
   return AVRC_NO_RESOURCES;
+}
+
+void AVRC_UpdateCcb(RawAddress* addr, uint32_t company_id) {
+  for (uint8_t i = 0; i < AVCT_NUM_CONN; i++) {
+    AVRC_TRACE_DEBUG("%s: handle:%d, update cback:0x%0x", __func__, i, company_id);
+    if (avrc_cb.ccb[i].company_id == company_id) {
+      avrc_cb.ccb[i].ctrl_cback.Run(i, AVRC_CLOSE_IND_EVT, 0, addr);
+    }
+  }
 }

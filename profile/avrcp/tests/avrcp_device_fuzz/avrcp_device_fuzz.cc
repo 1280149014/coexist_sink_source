@@ -6,6 +6,8 @@
 #include "packet_test_helper.h"
 #include "stack_config.h"
 
+bool btif_av_src_sink_coexist_enabled(void) { return true; }
+
 namespace bluetooth {
 namespace avrcp {
 class FakeMediaInterface : public MediaInterface {

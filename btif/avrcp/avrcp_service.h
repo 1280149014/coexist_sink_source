@@ -65,6 +65,9 @@ class AvrcpService : public MediaCallbacks {
   void SendFolderUpdate(bool available_players, bool addressed_player,
                         bool queue) override;
   void SendActiveDeviceChanged(const RawAddress& address) override;
+    /** when a2dp connected, btif will start register vol changed, so we need a
+   * interface for it. */
+  void RegisterVolChanged(const RawAddress& bdaddr);
 
   class ServiceInterfaceImpl : public ServiceInterface {
    public:

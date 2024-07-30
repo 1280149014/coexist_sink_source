@@ -1297,7 +1297,6 @@ void bta_dm_rmt_name(tBTA_DM_MSG* p_data) {
       bta_dm_search_cb.p_btm_inq_info) {
     bta_dm_search_cb.p_btm_inq_info->appl_knows_rem_name = true;
   }
-  //bta_dm_search_cb.peer_name 
   bta_dm_discover_device(bta_dm_search_cb.peer_bdaddr);
 }
 

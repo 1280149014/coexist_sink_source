@@ -27,6 +27,12 @@
 #include "profile/avrcp/device.h"
 #include "raw_address.h"
 
+extern bool btif_av_peer_is_connected_sink(const RawAddress& peer_address);
+extern bool btif_av_peer_is_connected_source(const RawAddress& peer_address);
+extern bool btif_av_both_enable(void);
+extern bool btif_av_src_sink_coexist_enabled(void);
+extern bool btif_av_peer_is_source(const RawAddress& peer_address);
+
 namespace bluetooth {
 namespace avrcp {
 
@@ -119,6 +125,8 @@ class ConnectionHandler {
    */
   static void InitForTesting(ConnectionHandler* handler);
 
+  virtual void RegisterVolChanged(const RawAddress& bdaddr);
+  
  private:
   AvrcpInterface* avrc_;
   SdpInterface* sdp_;

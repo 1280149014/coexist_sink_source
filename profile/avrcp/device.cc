@@ -26,6 +26,10 @@
 #include "packet/avrcp/set_addressed_player.h"
 #include "stack_config.h"
 
+extern bool btif_av_peer_is_connected_sink(const RawAddress& peer_address);
+extern bool btif_av_both_enable(void);
+extern bool btif_av_src_sink_coexist_enabled(void);
+
 namespace bluetooth {
 namespace avrcp {
 
@@ -99,7 +103,8 @@ void Device::VendorPacketHandler(uint8_t label,
         auto register_notification =
             Packet::Specialize<RegisterNotificationResponse>(pkt);
 
-        if (!register_notification->IsValid()) {
+        if (( (register_notification->GetEvent() == Event::VOLUME_CHANGED)) &&
+            !register_notification->IsValid()) {
           DEVICE_LOG(WARNING) << __func__ << ": Request packet is not valid";
           auto response =
               RejectBuilder::MakeBuilder(pkt->GetCommandPdu(),

@@ -102,6 +102,7 @@ enum {
   BTA_AV_CONN_CHG_EVT,
   BTA_AV_DEREG_COMP_EVT,
   BTA_AV_AVDT_RPT_CONN_EVT,
+  BTA_AV_API_PEER_SEP_EVT,
   BTA_AV_API_START_EVT, /* the following 2 events must be in the same order as
                            the *AP_*EVT */
   BTA_AV_API_STOP_EVT
@@ -242,6 +243,7 @@ typedef struct {
   tBTA_SEC sec_mask;
   tBTA_AV_RS_RES switch_res;
   uint16_t uuid; /* uuid of initiator */
+  bool incoming; /* peer launch connection */
 } tBTA_AV_API_OPEN;
 
 /* data type for BTA_AV_API_STOP_EVT */
@@ -397,6 +399,12 @@ typedef struct {
 #define BTA_AV_ROLE_SUSPEND 0x20     /* suspending on start */
 #define BTA_AV_ROLE_SUSPEND_OPT 0x40 /* Suspend on Start option is set */
 
+typedef struct {
+  BT_HDR_RIGID hdr;
+  RawAddress addr;
+  uint8_t sep;
+} tBTA_AV_API_PEER_SEP;
+
 /* union of all event datatypes */
 union tBTA_AV_DATA {
   BT_HDR hdr;
@@ -419,6 +427,7 @@ union tBTA_AV_DATA {
   tBTA_AV_SDP_RES sdp_res;
   tBTA_AV_API_META_RSP api_meta_rsp;
   tBTA_AV_API_STATUS_RSP api_status_rsp;
+  tBTA_AV_API_PEER_SEP peer_sep;
 };
 
 typedef union {
@@ -572,6 +581,8 @@ typedef struct {
   uint8_t lidx;               /* (index+1) to LCB */
   tBTA_AV_FEAT peer_features; /* peer features mask */
   uint16_t cover_art_psm;     /* BIP PSM for cover art feature */
+  tBTA_AV_FEAT peer_ct_features;
+  tBTA_AV_FEAT peer_tg_features;
 } tBTA_AV_RCB;
 #define BTA_AV_NUM_RCB (BTA_AV_NUM_STRS + 2)
 
@@ -616,6 +627,9 @@ typedef struct {
   uint8_t rs_idx;    /* (index + 1) to SCB for the one waiting for RS on open */
   bool sco_occupied; /* true if SCO is being used or call is in progress */
   uint8_t audio_streams; /* handle mask of streaming audio channels */
+ tBTA_AV_FEAT sink_features; /* sink features */
+  uint8_t reg_role;           /* bit0-src, bit1-sink */
+  tBTA_AV_RC_FEAT rc_feature; /* save peer rc feature */
 } tBTA_AV_CB;
 
 // total attempts are half seconds
@@ -653,6 +667,7 @@ extern tBTA_AV_CB bta_av_cb;
 /* config struct */
 extern const tBTA_AV_CFG* p_bta_av_cfg;
 extern const tBTA_AV_CFG bta_avk_cfg;
+const tBTA_AV_CFG* get_bta_avk_cfg();
 extern const tBTA_AV_CFG bta_av_cfg;
 extern const tBTA_AV_CFG bta_av_cfg_compatibility;
 
@@ -784,5 +799,6 @@ extern void bta_av_open_at_inc(tBTA_AV_SCB* p_scb, tBTA_AV_DATA* p_data);
 extern void bta_av_offload_req(tBTA_AV_SCB* p_scb, tBTA_AV_DATA* p_data);
 extern void bta_av_offload_rsp(tBTA_AV_SCB* p_scb, tBTA_AV_DATA* p_data);
 extern void bta_av_vendor_offload_stop(void);
+extern void bta_av_api_set_peer_sep(tBTA_AV_DATA* p_data);
 
 #endif /* BTA_AV_INT_H */

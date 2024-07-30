@@ -32,6 +32,13 @@
 #include "osi/include/allocator.h"
 #include "osi/include/properties.h"
 
+
+extern bool btif_av_peer_is_connected_sink(const RawAddress& peer_address);
+extern bool btif_av_peer_is_connected_source(const RawAddress& peer_address);
+extern bool btif_av_both_enable(void);
+extern bool btif_av_src_sink_coexist_enabled(void);
+extern bool btif_av_peer_is_source(const RawAddress& peer_address);
+
 namespace bluetooth {
 namespace avrcp {
 
@@ -250,10 +257,14 @@ void ConnectionHandler::InitiatorControlCb(uint8_t handle, uint8_t event,
       // interfaces it needs.
       connection_cb_.Run(newDevice);
 
-      if (feature_iter->second & BTA_AV_FEAT_ADV_CTRL) {
-        newDevice->RegisterVolumeChanged();
-      } else if (instance_->vol_ != nullptr) {
-        instance_->vol_->DeviceConnected(newDevice->GetAddress());
+      if (!btif_av_src_sink_coexist_enabled() ||
+          (btif_av_src_sink_coexist_enabled() &&
+           btif_av_peer_is_connected_sink(newDevice->GetAddress()))) {
+        if (feature_iter->second & BTA_AV_FEAT_ADV_CTRL) {
+          newDevice->RegisterVolumeChanged();
+        } else if (instance_->vol_ != nullptr) {
+          instance_->vol_->DeviceConnected(newDevice->GetAddress());
+        }
       }
 
     } break;
@@ -307,7 +318,19 @@ void ConnectionHandler::AcceptorControlCb(uint8_t handle, uint8_t event,
   switch (event) {
     case AVRC_OPEN_IND_EVT: {
       LOG(INFO) << __PRETTY_FUNCTION__ << ": Connection Opened Event";
-
+      if (btif_av_src_sink_coexist_enabled() && peer_addr != NULL &&
+          btif_av_peer_is_connected_source(*peer_addr)) {
+        LOG(WARNING) << "peer is src, close new avrcp cback";
+        if (device_map_.find(handle) != device_map_.end()) {
+          //std::lock_guard<std::mutex> lock(device_map_lock);
+          feature_map_.erase(device_map_[handle]->GetAddress());
+          device_map_[handle]->DeviceDisconnected();
+          device_map_.erase(handle);
+        }
+        avrc_->Close(handle);
+        AvrcpConnect(false, RawAddress::kAny);
+        return;
+      }
       auto&& callback = base::Bind(&ConnectionHandler::SendMessage,
                                    weak_ptr_factory_.GetWeakPtr(), handle);
       auto&& ctrl_mtu = avrc_->GetPeerMtu(handle) - AVCT_HDR_LEN;
@@ -336,10 +359,14 @@ void ConnectionHandler::AcceptorControlCb(uint8_t handle, uint8_t event,
 
         // TODO (apanicke): Report to the VolumeInterface that a new Device is
         // connected that doesn't support absolute volume.
-        if (features & BTA_AV_FEAT_ADV_CTRL) {
-          device->RegisterVolumeChanged();
-        } else if (instance_->vol_ != nullptr) {
-          instance_->vol_->DeviceConnected(device->GetAddress());
+        if (!btif_av_src_sink_coexist_enabled() ||
+            (btif_av_src_sink_coexist_enabled() &&
+             btif_av_peer_is_connected_sink(device->GetAddress()))) {
+          if (features & BTA_AV_FEAT_ADV_CTRL) {
+            device->RegisterVolumeChanged();
+          } else if (instance_->vol_ != nullptr) {
+            instance_->vol_->DeviceConnected(device->GetAddress());
+          }
         }
       };
 
@@ -357,10 +384,12 @@ void ConnectionHandler::AcceptorControlCb(uint8_t handle, uint8_t event,
             << "Connection Close received from device that doesn't exist";
         return;
       }
+      {
+        feature_map_.erase(device_map_[handle]->GetAddress());
+        device_map_[handle]->DeviceDisconnected();
+        device_map_.erase(handle);
+      }
       avrc_->Close(handle);
-      feature_map_.erase(device_map_[handle]->GetAddress());
-      device_map_[handle]->DeviceDisconnected();
-      device_map_.erase(handle);
     } break;
 
     case AVRC_BROWSE_OPEN_IND_EVT: {
@@ -397,6 +426,12 @@ void ConnectionHandler::MessageCb(uint8_t handle, uint8_t label, uint8_t opcode,
   auto pkt = AvrcpMessageConverter::Parse(p_msg);
 
   if (opcode == AVRC_OP_BROWSE) {
+    if (btif_av_src_sink_coexist_enabled()) {
+      if (p_msg->browse.hdr.ctype == AVCT_RSP) {
+        VLOG(2) << "ignore response handle " << (unsigned int)handle;
+        return;
+      }
+    }
     LOG(ERROR) << "Browse Message received on handle " << (unsigned int)handle;
     device_map_[handle]->BrowseMessageReceived(label, BrowsePacket::Parse(pkt));
     return;
@@ -562,5 +597,19 @@ void ConnectionHandler::SendMessage(
   avrc_->MsgReq(handle, label, ctype, pkt);
 }
 
+void ConnectionHandler::RegisterVolChanged(const RawAddress& bdaddr) {
+  LOG(INFO) << "Attempting to RegisterVolChanged device " << bdaddr;
+  for (auto it = device_map_.begin(); it != device_map_.end(); it++) {
+    if (bdaddr == it->second->GetAddress()) {
+      const auto& feature_iter = feature_map_.find(bdaddr);
+      if (feature_iter->second & BTA_AV_FEAT_ADV_CTRL) {
+        it->second->RegisterVolumeChanged();
+      } else if (instance_->vol_ != nullptr) {
+        instance_->vol_->DeviceConnected(bdaddr);
+      }
+      break;
+    }
+  }
+}
 }  // namespace avrcp
 }  // namespace bluetooth

@@ -30,6 +30,9 @@
 #include "tests/avrcp/avrcp_test_packets.h"
 #include "tests/packet_test_helper.h"
 
+
+bool btif_av_src_sink_coexist_enabled(void) { return true; }
+
 namespace bluetooth {
 namespace avrcp {
 
