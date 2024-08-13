@@ -196,9 +196,9 @@ const tBTA_AV_NSM_ACT bta_av_nsm_act[] = {
     bta_av_conn_chg,         /* BTA_AV_CONN_CHG_EVT */
     bta_av_dereg_comp,       /* BTA_AV_DEREG_COMP_EVT */
     bta_av_rpc_conn, /* BTA_AV_AVDT_RPT_CONN_EVT */
+    bta_av_api_set_peer_sep, /* BTA_AV_API_PEER_SEP_EVT */ 
     bta_av_api_to_ssm, /* BTA_AV_API_START_EVT */
     bta_av_api_to_ssm, /* BTA_AV_API_STOP_EVT */
-    bta_av_api_set_peer_sep, /* BTA_AV_API_PEER_SEP_EVT */ 
 };
 
 /*****************************************************************************
@@ -950,9 +950,10 @@ static void bta_av_api_to_ssm(tBTA_AV_DATA* p_data) {
       p_data->hdr.event - BTA_AV_FIRST_A2S_API_EVT + BTA_AV_FIRST_A2S_SSM_EVT;
   tBTA_AV_HNDL handle = p_data->hdr.layer_specific;
   tBTA_AV_SCB* p_scb = bta_av_hndl_to_scb(handle);
-
   if (p_scb != nullptr) {
     bta_av_ssm_execute(p_scb, event, p_data);
+  } else {
+    APPL_TRACE_ERROR("%s: handle:%d not found", __func__, handle);
   }
 }
 
