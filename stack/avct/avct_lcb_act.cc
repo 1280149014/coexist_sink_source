@@ -172,7 +172,7 @@ static BT_HDR* avct_lcb_msg_asmbl(tAVCT_LCB* p_lcb, BT_HDR* p_buf) {
  ******************************************************************************/
 void avct_lcb_chnl_open(tAVCT_LCB* p_lcb, UNUSED_ATTR tAVCT_LCB_EVT* p_data) {
   uint16_t result = AVCT_RESULT_FAIL;
-
+  AVCT_TRACE_WARNING("%s ", __func__);
   BTM_SetOutService(p_lcb->peer_addr, BTM_SEC_SERVICE_AVCTP, 0);
   /* call l2cap connect req */
   p_lcb->ch_state = AVCT_CH_CONN;
@@ -662,7 +662,7 @@ void avct_lcb_msg_ind(tAVCT_LCB* p_lcb, tAVCT_LCB_EVT* p_data) {
   uint8_t label, type, cr_ipid;
   uint16_t pid;
   tAVCT_CCB* p_ccb;
-
+  AVCT_TRACE_DEBUG("%s", __func__);
   /* this p_buf is to be reported through p_msg_cback. The layer_specific
    * needs to be set properly to indicate that it is received through
    * control channel */

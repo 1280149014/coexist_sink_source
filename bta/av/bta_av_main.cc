@@ -447,7 +447,7 @@ void tBTA_AV_SCB::OnConnected(const RawAddress& peer_address) {
   size_t version_value_size = sizeof(avdtp_version);
   if (!btif_config_get_bin(peer_address_.ToString(), AVDTP_VERSION_CONFIG_KEY,
                            (uint8_t*)&avdtp_version, &version_value_size)) {
-    LOG_WARN(LOG_TAG, "%s: Failed to read cached peer AVDTP version for %s",
+    BTIF_TRACE_WARNING("%s: Failed to read cached peer AVDTP version for %s",
              __func__, peer_address_.ToString().c_str());
   } else {
     SetAvdtpVersion(avdtp_version);

@@ -26,6 +26,21 @@
 // Returns true on success, otherwise false.
 bool bta_av_co_set_active_peer(const RawAddress& peer_addr);
 
+/**
+ * Sets the active peer within the sink profile of the bta av co instance.
+ * @param peer_address peer address of the remote device.
+ * @return true on success, otherwise false.
+ */
+bool bta_av_co_set_active_sink_peer(const RawAddress& peer_address);
+/**
+ * Sets the active peer within the sink profile of the bta av co instance.
+ * @param peer_address peer address of the remote device.
+ * @return true on success, otherwise false.
+ */
+bool bta_av_co_set_active_source_peer(const RawAddress& peer_address);
+
+void bta_av_co_save_codec(const uint8_t* new_codec_config);
+
 // Gets the A2DP peer parameters that are used to initialize the encoder.
 // The peer address is |peer_addr|.
 // The parameters are stored in |p_peer_params|.

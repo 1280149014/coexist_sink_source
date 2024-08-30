@@ -19,6 +19,7 @@
 
 #define LOG_TAG "bt_btif_a2dp_source"
 #define ATRACE_TAG ATRACE_TAG_AUDIO
+#define ADDRESS_TO_LOGGABLE_CSTR(addr) addr.ToString().c_str()
 
 #include <base/run_loop.h>
 #ifndef OS_GENERIC
@@ -572,10 +573,20 @@ static void btif_a2dp_source_setup_codec_delayed(
   tA2DP_ENCODER_INIT_PEER_PARAMS peer_params;
   bta_av_co_get_peer_params(peer_address, &peer_params);
 
-  if (!bta_av_co_set_active_peer(peer_address)) {
-    LOG_ERROR(LOG_TAG, "%s: Cannot stream audio: cannot set active peer to %s",
-              __func__, peer_address.ToString().c_str());
-    return;
+  //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink)) {
+  /*if(0) {
+    if (!bta_av_co_set_active_peer(peer_address)) {
+      LOG_ERROR("%s: Cannot stream audio: cannot set active peer to %s",
+               __func__, ADDRESS_TO_LOGGABLE_CSTR(peer_address));
+      return;
+    }
+  } else*/ 
+  {
+    if (!bta_av_co_set_active_source_peer(peer_address)) {
+      BTIF_TRACE_ERROR("%s: Cannot stream audio: cannot set active peer to %s",
+                __func__, ADDRESS_TO_LOGGABLE_CSTR(peer_address));
+      return;
+    }
   }
   btif_a2dp_source_cb.encoder_interface = bta_av_co_get_encoder_interface();
   if (btif_a2dp_source_cb.encoder_interface == nullptr) {
@@ -749,7 +760,7 @@ void btif_a2dp_source_on_suspended(tBTA_AV_SUSPEND* p_av_suspend) {
 
   // check for status failures
   if (p_av_suspend->status != BTA_AV_SUCCESS) {
-    LOG_WARN(LOG_TAG, "%s: A2DP suspend failed: status=%d, initiator=%s",
+    BTIF_TRACE_WARNING("%s: A2DP suspend failed: status=%d, initiator=%s",
              __func__, p_av_suspend->status,
              (p_av_suspend->initiator ? "true" : "false"));
     if (p_av_suspend->initiator) {
@@ -923,7 +934,7 @@ static uint32_t btif_a2dp_source_read_callback(uint8_t* p_buf, uint32_t len) {
   }
 
   if (bytes_read < len) {
-    LOG_WARN(LOG_TAG, "%s: UNDERFLOW: ONLY READ %d BYTES OUT OF %d", __func__,
+    BTIF_TRACE_WARNING("%s: UNDERFLOW: ONLY READ %d BYTES OUT OF %d", __func__,
              bytes_read, len);
     btif_a2dp_source_cb.stats.media_read_total_underflow_bytes +=
         (len - bytes_read);
@@ -966,7 +977,7 @@ static bool btif_a2dp_source_enqueue_callback(BT_HDR* p_buf, size_t frames_n,
   // TODO: Using frames_n here is probably wrong: should be "+ 1" instead.
   if (fixed_queue_length(btif_a2dp_source_cb.tx_audio_queue) + frames_n >
       MAX_OUTPUT_A2DP_FRAME_QUEUE_SZ) {
-    LOG_WARN(LOG_TAG, "%s: TX queue buffer size now=%u adding=%u max=%d",
+    BTIF_TRACE_WARNING("%s: TX queue buffer size now=%u adding=%u max=%d",
              __func__,
              (uint32_t)fixed_queue_length(btif_a2dp_source_cb.tx_audio_queue),
              (uint32_t)frames_n, MAX_OUTPUT_A2DP_FRAME_QUEUE_SZ);
@@ -1000,12 +1011,12 @@ static bool btif_a2dp_source_enqueue_callback(BT_HDR* p_buf, size_t frames_n,
     RawAddress peer_bda = btif_av_source_active_peer();
     tBTM_STATUS status = BTM_ReadRSSI(peer_bda, btm_read_rssi_cb);
     if (status != BTM_CMD_STARTED) {
-      LOG_WARN(LOG_TAG, "%s: Cannot read RSSI: status %d", __func__, status);
+      BTIF_TRACE_WARNING("%s: Cannot read RSSI: status %d", __func__, status);
     }
     status = BTM_ReadFailedContactCounter(peer_bda,
                                           btm_read_failed_contact_counter_cb);
     if (status != BTM_CMD_STARTED) {
-      LOG_WARN(LOG_TAG, "%s: Cannot read Failed Contact Counter: status %d",
+      BTIF_TRACE_WARNING("%s: Cannot read Failed Contact Counter: status %d",
                __func__, status);
     }
     status = BTM_ReadAutomaticFlushTimeout(peer_bda,

@@ -123,7 +123,7 @@ void avct_l2c_br_connect_ind_cback(const RawAddress& bd_addr, uint16_t lcid,
   tL2CAP_CFG_INFO cfg;
   tAVCT_BCB* p_bcb;
   tL2CAP_ERTM_INFO ertm_info;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x result: %d", __func__, lcid, result);
   memset(&cfg, 0, sizeof(tL2CAP_CFG_INFO));
   cfg.mtu_present = true;
 
@@ -185,7 +185,7 @@ void avct_l2c_br_connect_ind_cback(const RawAddress& bd_addr, uint16_t lcid,
 void avct_l2c_br_connect_cfm_cback(uint16_t lcid, uint16_t result) {
   tAVCT_BCB* p_lcb;
   tL2CAP_CFG_INFO cfg;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x result: %d", __func__, lcid, result);
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if ((p_lcb == NULL) || (p_lcb->ch_state != AVCT_CH_CONN)) return;
@@ -230,7 +230,7 @@ void avct_l2c_br_config_cfm_cback(uint16_t lcid, tL2CAP_CFG_INFO* p_cfg) {
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if ((p_lcb == NULL) || (p_lcb->ch_state != AVCT_CH_CFG)) return;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x", __func__, lcid);
   /* if result successful */
   if (p_cfg->result == L2CAP_CFG_OK) {
     /* update flags */
@@ -272,7 +272,7 @@ void avct_l2c_br_config_ind_cback(uint16_t lcid, tL2CAP_CFG_INFO* p_cfg) {
   */
   p_cfg->flush_to_present = false;
   p_cfg->qos_present = false;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x", __func__, lcid);
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if (p_lcb == NULL) return;
@@ -338,7 +338,7 @@ void avct_l2c_br_disconnect_ind_cback(uint16_t lcid, bool ack_needed) {
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if (p_lcb == NULL) return;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x", __func__, lcid);
   if (ack_needed) {
     /* send L2CAP disconnect response */
     L2CA_DisconnectRsp(lcid);
@@ -366,7 +366,7 @@ void avct_l2c_br_disconnect_cfm_cback(uint16_t lcid, uint16_t result) {
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if (p_lcb == NULL) return;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x", __func__, lcid);
   /* result value may be previously stored */
   res = (p_lcb->ch_result != 0) ? p_lcb->ch_result : result;
   p_lcb->ch_result = 0;
@@ -388,7 +388,7 @@ void avct_l2c_br_disconnect_cfm_cback(uint16_t lcid, uint16_t result) {
  ******************************************************************************/
 void avct_l2c_br_congestion_ind_cback(uint16_t lcid, bool is_congested) {
   tAVCT_BCB* p_lcb;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x", __func__, lcid);
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if (p_lcb == NULL) return;
@@ -411,7 +411,7 @@ void avct_l2c_br_congestion_ind_cback(uint16_t lcid, bool is_congested) {
 void avct_l2c_br_data_ind_cback(uint16_t lcid, BT_HDR* p_buf) {
   tAVCT_BCB* p_lcb;
   tAVCT_LCB_EVT evt_data;
-
+  AVCT_TRACE_WARNING("%s() lcid: 0x%04x", __func__, lcid);
   /* look up lcb for this channel */
   p_lcb = avct_bcb_by_lcid(lcid);
   if (p_lcb == NULL) {

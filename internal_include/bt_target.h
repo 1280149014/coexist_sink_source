@@ -1216,7 +1216,7 @@
 #endif
 
 #ifndef DUMP_PCM_DATA
-#define DUMP_PCM_DATA FALSE
+#define DUMP_PCM_DATA TRUE
 #endif
 
 /******************************************************************************

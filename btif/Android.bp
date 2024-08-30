@@ -38,6 +38,7 @@ cc_library_static {
         // Callouts
         "co/bta_dm_co.cc",
         "co/bta_av_co.cc",
+        "co/bta_av_co_peer.cc",
         "co/bta_hh_co.cc",
         "co/bta_pan_co.cc",
         "co/bta_gatts_co.cc",

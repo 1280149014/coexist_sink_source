@@ -70,6 +70,12 @@ typedef enum {
   BTAV_A2DP_CODEC_INDEX_MAX = BTAV_A2DP_CODEC_INDEX_SINK_MAX
 } btav_a2dp_codec_index_t;
 
+typedef struct {
+  btav_a2dp_codec_index_t codec_type;
+  uint64_t codec_id;
+  std::string codec_name;
+} btav_a2dp_codec_info_t;
+
 typedef enum {
   // Disable the codec.
   // NOTE: This value can be used only during initialization when

@@ -462,7 +462,7 @@ static const gatt::Descriptor* find_descriptor_by_short_uuid(
       BTA_GATTC_GetCharacteristic(conn_id, char_handle);
 
   if (!p_char) {
-    LOG_WARN(LOG_TAG, "%s No such characteristic: %d", __func__, char_handle);
+    BTIF_TRACE_WARNING("%s No such characteristic: %d", __func__, char_handle);
     return NULL;
   }
 

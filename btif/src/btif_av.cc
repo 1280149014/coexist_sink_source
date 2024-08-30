@@ -475,23 +475,34 @@ class BtifAvSource {
     if (peer_address.IsEmpty()) {
       BTIF_TRACE_EVENT("%s: peer address is empty, shutdown the Audio source",
                        __func__);
-      if(!btif_av_src_sink_coexist_enabled() || (btif_av_src_sink_coexist_enabled() &&
-          btif_av_sink_active_peer().IsEmpty())) {
-        if (!bta_av_co_set_active_peer(peer_address)) {
-          LOG(WARNING) << __func__
-                      << ": unable to set active peer to empty in BtaAvCo";
+      //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink)) {
+      /*if(0) {
+        if (!btif_av_src_sink_coexist_enabled() ||
+            (btif_av_src_sink_coexist_enabled() &&
+             btif_av_sink_active_peer().IsEmpty())) {
+          if (!bta_av_co_set_active_peer(peer_address)) {
+            LOG_WARN(LOG_TAG, "Unable to set active peer to empty in BtaAvCo");
+          }
+        }
+      } else */
+      {
+        if (!bta_av_co_set_active_source_peer(peer_address)) {
+          LOG_WARN(LOG_TAG, "Unable to set active peer to empty in BtaAvCo");
         }
       }
+      
       btif_a2dp_source_end_session(active_peer_);
       btif_a2dp_source_shutdown();
       active_peer_ = peer_address;
       peer_ready_promise.set_value();
       return true;
     }
-
-    if(btif_av_src_sink_coexist_enabled()) {
+    int flag = 0;
+    //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink) &&
+    //  btif_av_src_sink_coexist_enabled()) 
+    if(flag) {
       btif_av_sink_delete_active_peer();
-    }
+    } 
     BtifAvPeer* peer = FindPeer(peer_address);
     if (peer != nullptr && !peer->IsConnected()) {
       LOG(ERROR) << __func__ << ": Error setting " << peer->PeerAddress()
@@ -511,12 +522,20 @@ class BtifAvSource {
 
   void DeleteActivePeer(void) {
         BTIF_TRACE_EVENT("%s", __func__);
-    if (btif_av_sink_active_peer().IsEmpty()) {
-      if (!bta_av_co_set_active_peer(RawAddress::kEmpty)) {
-        BTIF_TRACE_EVENT("%s : unable to set active peer to empty in BtaAvCo",  __func__);
+    //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink)) {
+    /*if(0) {  
+      if (btif_av_sink_active_peer().IsEmpty()) {
+        if (!bta_av_co_set_active_peer(RawAddress::kEmpty)) {
+          LOG_WARN(LOG_TAG, "Unable to set active source peer to empty in BtaAvCo");
+        }
+      } else {
+        LOG_WARN(LOG_TAG, "there is an active peer as source role");
       }
-    } else {
-      BTIF_TRACE_EVENT("%s : there is an active peer as source role", __func__);
+    } else 
+    */{
+      if (!bta_av_co_set_active_source_peer(RawAddress::kEmpty)) {
+        LOG_WARN(LOG_TAG, "Unable to set active source peer to empty in BtaAvCo");
+      }
     }
     btif_a2dp_source_end_session(active_peer_);
     btif_a2dp_source_shutdown();
@@ -644,12 +663,19 @@ class BtifAvSink {
     if (peer_address.IsEmpty()) {
       BTIF_TRACE_EVENT("%s: peer address is empty, shutdown the Audio sink",
                        __func__);
-      if (!btif_av_src_sink_coexist_enabled() ||
-          (btif_av_src_sink_coexist_enabled() &&
-           btif_av_source_active_peer().IsEmpty())) {
-        if (!bta_av_co_set_active_peer(peer_address)) {
-          LOG(WARNING) << __func__
-                       << ": unable to set active peer to empty in BtaAvCo";
+      //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink)) {
+      /* if(0) {
+        if (!btif_av_src_sink_coexist_enabled() ||
+            (btif_av_src_sink_coexist_enabled() &&
+             btif_av_source_active_peer().IsEmpty())) {
+          if (!bta_av_co_set_active_peer(peer_address)) {
+            LOG_WARN(LOG_TAG, "Unable to set active sink peer to empty in BtaAvCo");
+          }
+        }
+      } else */
+      {
+        if (!bta_av_co_set_active_sink_peer(peer_address)) {
+          LOG_WARN(LOG_TAG, "Unable to set active sink peer to empty in BtaAvCo");
         }
       }
       btif_a2dp_sink_end_session(active_peer_);
@@ -658,8 +684,9 @@ class BtifAvSink {
       peer_ready_promise.set_value();
       return true;
     }
-
-    if (btif_av_src_sink_coexist_enabled()) {
+    int  flag = 0;
+    //if (0 && btif_av_src_sink_coexist_enabled()) {
+    if(flag) {
       btif_av_source_delete_active_peer();
     }
     BtifAvPeer* peer = FindPeer(peer_address);
@@ -681,13 +708,20 @@ class BtifAvSink {
 
   void DeleteActivePeer(void) {
     BTIF_TRACE_EVENT("%s", __func__);
-    if (btif_av_source_active_peer().IsEmpty()) {
-      if (!bta_av_co_set_active_peer(RawAddress::kEmpty)) {
-        LOG(WARNING) << __func__
-                     << ": unable to set active peer to empty in BtaAvCo";
+    //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink)) {
+    /*if(0) {
+      if (btif_av_source_active_peer().IsEmpty()) {
+        if (!bta_av_co_set_active_peer(RawAddress::kEmpty)) {
+          BTIF_TRACE_WARNING("Unable to set active peer to empty in BtaAvCo");
+        }
+      } else {
+        BTIF_TRACE_WARNING("There is an active peer as sink role");
       }
-    } else {
-      LOG(WARNING) << __func__ << ": there is an active peer as sink role";
+    } else 
+    */{
+      if (!bta_av_co_set_active_sink_peer(RawAddress::kEmpty)) {
+        BTIF_TRACE_WARNING("Unable to set sink active peer to empty in BtaAvCo");
+      }
     }
     btif_a2dp_sink_end_session(active_peer_);
     btif_a2dp_sink_shutdown();
@@ -1201,12 +1235,12 @@ BtifAvPeer* BtifAvSource::FindOrCreatePeer(const RawAddress& peer_address,
 
 bool BtifAvSource::AllowedToConnect(const RawAddress& peer_address) const {
   int connected = 0;
-  if (btif_av_src_sink_coexist_enabled() && invalid_peer_check_) {
+  /*if (false && btif_av_src_sink_coexist_enabled() && invalid_peer_check_) {
     BTIF_TRACE_DEBUG(
         "invalid_peer_check_ so allow to connect here, when"
         " BTA_AV_OPEN_EVT coming, would check again!");
     return true;
-  }
+  }*/
   // Count peers that are in the process of connecting or already connected
   for (auto it : peers_) {
     const BtifAvPeer* peer = it.second;
@@ -1216,8 +1250,8 @@ bool BtifAvSource::AllowedToConnect(const RawAddress& peer_address) const {
       case BtifAvStateMachine::kStateStarted:
         if (peer->PeerAddress() == peer_address) {
           /* we should check if another role is used */
-          if (btif_av_src_sink_coexist_enabled() && btif_av_both_enable())
-            break;
+          //if (false && btif_av_src_sink_coexist_enabled() && btif_av_both_enable())
+          //  break;
           return true;  // Already connected or accounted for
         }
         connected++;
@@ -1226,7 +1260,7 @@ bool BtifAvSource::AllowedToConnect(const RawAddress& peer_address) const {
         break;
     }
   }
-  if (btif_av_src_sink_coexist_enabled() && btif_av_both_enable()) {
+  if (false && btif_av_src_sink_coexist_enabled() && btif_av_both_enable()) {
     BTIF_TRACE_DEBUG("%s: connected=%d, max_connected_peers_=%d, sink_peers=%d",
              __PRETTY_FUNCTION__, connected, max_connected_peers_,
              (int)btif_av_sink.Peers().size());
@@ -1460,12 +1494,12 @@ BtifAvPeer* BtifAvSink::FindOrCreatePeer(const RawAddress& peer_address,
 
 bool BtifAvSink::AllowedToConnect(const RawAddress& peer_address) const {
   int connected = 0;
-  if (btif_av_src_sink_coexist_enabled() && invalid_peer_check_) {
+  /*if (false && btif_av_src_sink_coexist_enabled() && invalid_peer_check_) {
     LOG_INFO(LOG_TAG, 
         "invalid_peer_check_ so allow to connect here, when"
         " BTA_AV_OPEN_EVT coming, would check again!");
     return true;
-  }
+  }*/
   // Count peers that are in the process of connecting or already connected
   for (auto it : peers_) {
     const BtifAvPeer* peer = it.second;
@@ -1475,7 +1509,7 @@ bool BtifAvSink::AllowedToConnect(const RawAddress& peer_address) const {
       case BtifAvStateMachine::kStateStarted:
         if (peer->PeerAddress() == peer_address) {
           /* we should check if another role is used */
-          if (btif_av_both_enable()) break;
+          if (false && btif_av_both_enable()) break;
           return true;  // Already connected or accounted for
         }
         connected++;
@@ -1484,7 +1518,7 @@ bool BtifAvSink::AllowedToConnect(const RawAddress& peer_address) const {
         break;
     }
   }
-  if (btif_av_both_enable()) {
+  if (false && btif_av_both_enable()) {
     LOG_INFO(LOG_TAG, "connected=%d, max_connected_peers_=%d, source_peers=%d",
              connected, max_connected_peers_,
              (int)btif_av_source.Peers().size());
@@ -1659,10 +1693,18 @@ bool BtifAvStateMachine::StateIdle::ProcessEvent(uint32_t event, void* p_data) {
       // Check whether connection is allowed
       if (peer_.IsSink()) {
         can_connect = btif_av_source.AllowedToConnect(peer_.PeerAddress());
-        if (!can_connect) src_disconnect_sink(peer_.PeerAddress());
+        if (!can_connect) {
+          BTIF_TRACE_ERROR("Source profile doesn't allow connection to peer:{}",
+                     ADDRESS_TO_LOGGABLE_CSTR(peer_.PeerAddress()));
+          src_disconnect_sink(peer_.PeerAddress());
+        }
       } else if (peer_.IsSource()) {
         can_connect = btif_av_sink.AllowedToConnect(peer_.PeerAddress());
-        if (!can_connect) sink_disconnect_src(peer_.PeerAddress());
+        if (!can_connect) {
+          BTIF_TRACE_ERROR("Sink profile doesn't allow connection to peer:{}",
+                     ADDRESS_TO_LOGGABLE_CSTR(peer_.PeerAddress()));
+          sink_disconnect_src(peer_.PeerAddress());
+        }
       }
       if (!can_connect) {
         BTIF_TRACE_ERROR(
@@ -1787,12 +1829,14 @@ bool BtifAvStateMachine::StateIdle::ProcessEvent(uint32_t event, void* p_data) {
                            ADDRESS_TO_LOGGABLE_CSTR(peer_.PeerAddress()),
                            peer_.PeerSep(), p_bta_data->open.sep);
           /* if peer is wrong sep type, move it to BtifAvSxxx */
-          if (peer_.PeerSep() == AVDT_TSEP_SNK) {
-            BTIF_TRACE_DEBUG("set source invalid_peer_check as false");
-            btif_av_source.SetInvalidPeerCheck(false);
-          } else {
-            BTIF_TRACE_DEBUG("set sink invalid_peer_check as false");
-            btif_av_sink.SetInvalidPeerCheck(false);
+          if(false) {
+            if (peer_.PeerSep() == AVDT_TSEP_SNK) {
+              BTIF_TRACE_DEBUG("set source invalid_peer_check as false");
+              btif_av_source.SetInvalidPeerCheck(false);
+            } else {
+              BTIF_TRACE_DEBUG("set sink invalid_peer_check as false");
+              btif_av_sink.SetInvalidPeerCheck(false);
+            }
           }
           if (peer_.PeerSep() != p_bta_data->open.sep) {
             BtifAvPeer* tmp_peer = nullptr;
@@ -1977,12 +2021,14 @@ bool BtifAvStateMachine::StateOpening::ProcessEvent(uint32_t event,
                            ADDRESS_TO_LOGGABLE_CSTR(peer_.PeerAddress()),
                            peer_.PeerSep(), p_bta_data->open.sep);
           /* if peer is wrong sep type, move it to BtifAvSxxx */
-          if (peer_.PeerSep() == AVDT_TSEP_SNK) {
-            BTIF_TRACE_DEBUG("set source invalid_peer_check as false");
-            btif_av_source.SetInvalidPeerCheck(false);
-          } else {
-            BTIF_TRACE_DEBUG("set sink invalid_peer_check as false");
-            btif_av_sink.SetInvalidPeerCheck(false);
+          if(false) {
+            if (peer_.PeerSep() == AVDT_TSEP_SNK) {
+              BTIF_TRACE_DEBUG("set source invalid_peer_check as false");
+              btif_av_source.SetInvalidPeerCheck(false);
+            } else {
+              BTIF_TRACE_DEBUG("set sink invalid_peer_check as false");
+              btif_av_sink.SetInvalidPeerCheck(false);
+            }
           }
           if (peer_.PeerSep() != p_bta_data->open.sep) {
             BtifAvPeer* tmp_peer = nullptr;
@@ -2853,7 +2899,9 @@ static BtifAvPeer* btif_av_handle_both_peer(uint8_t peer_sep,
                            peer_sep);
           peer = btif_av_source.FindOrCreatePeer(peer_address, bta_handle);
         } else {
+          if(false) {
           btif_av_source.SetInvalidPeerCheck(true);
+          }
           if (!btif_av_source.Peers().empty()) {
             BTIF_TRACE_DEBUG(
                 "%s: peer_sep invalid, and already has sink peer,"
