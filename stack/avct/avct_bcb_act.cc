@@ -550,7 +550,7 @@ void avct_bcb_msg_ind(tAVCT_BCB* p_bcb, tAVCT_LCB_EVT* p_data) {
   }
   bool bind = false;
   if(1) {
-      bind = avct_msg_ind_for_src_sink_coexist(p_lcb, p_data, label, cr_ipid);
+      bind = avct_msg_ind_for_src_sink_coexist(p_lcb, p_data, label, cr_ipid, pid);
       osi_free_and_reset((void**)&p_data->p_buf);
       if (bind) return;
   } else {

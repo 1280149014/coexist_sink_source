@@ -690,7 +690,7 @@ void avct_lcb_msg_ind(tAVCT_LCB* p_lcb, tAVCT_LCB_EVT* p_data) {
   }
   bool bind = false;
   if(1) { //todo ylq
-    bind = avct_msg_ind_for_src_sink_coexist(p_lcb, p_data, label, cr_ipid);
+    bind = avct_msg_ind_for_src_sink_coexist(p_lcb, p_data, label, cr_ipid, pid);
     osi_free_and_reset((void**)&p_data->p_buf);
     if (bind) return;
   } else {
@@ -724,19 +724,21 @@ void avct_lcb_msg_ind(tAVCT_LCB* p_lcb, tAVCT_LCB_EVT* p_data) {
 }
 
 bool avct_msg_ind_for_src_sink_coexist(tAVCT_LCB* p_lcb, tAVCT_LCB_EVT* p_data,
-                                       uint8_t label, uint8_t cr_ipid) {
+                                       uint8_t label, uint8_t cr_ipid, uint16_t pid) {
   bool bind = false;
   tAVCT_CCB* p_ccb;
   int p_buf_len;
   uint8_t* p;
-  uint16_t pid;
+  //uint16_t pid;
   p = (uint8_t*)(p_data->p_buf + 1) + p_data->p_buf->offset;
-  BE_STREAM_TO_UINT16(pid, p);
+  //BE_STREAM_TO_UINT16(pid, p);
   p_ccb = &avct_cb.ccb[0];
   p_data->p_buf->offset += AVCT_HDR_LEN_SINGLE;
   p_data->p_buf->len -= AVCT_HDR_LEN_SINGLE;
   p_buf_len = BT_HDR_SIZE + p_data->p_buf->offset + p_data->p_buf->len;
+  AVCT_TRACE_WARNING("%s, PID= %x, p_buf_len = %d, p_ccb->p_lcb = %x ", __func__, pid, p_buf_len, p_lcb);
   for (int i = 0; i < AVCT_NUM_CONN; i++, p_ccb++) {
+    AVCT_TRACE_WARNING("i = %d, p_ccb->allocated = %u, p_ccb->p_lcb= %x, pid = %u", i, p_ccb->allocated, p_ccb->p_lcb, p_ccb->cc.pid);
     if (p_ccb->allocated && (p_ccb->p_lcb == p_lcb) && (p_ccb->cc.pid == pid)) {
       /* PID found; send msg up, adjust bt hdr and call msg callback */
       bind = true;
