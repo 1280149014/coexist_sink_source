@@ -98,7 +98,7 @@ static void btif_a2dp_recv_ctrl_data(void) {
       }
 
       /* check whether AV is ready to setup A2DP datapath */
-      if (btif_av_stream_ready() || btif_av_stream_started_ready()) {
+      if (btif_av_stream_ready(A2dpType::kSource) || btif_av_stream_started_ready(A2dpType::kSource)) {
         btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
       } else {
         APPL_TRACE_WARNING("%s: A2DP command %s while AV stream is not ready",
@@ -127,7 +127,7 @@ static void btif_a2dp_recv_ctrl_data(void) {
         break;
       }
 
-      if (btif_av_stream_ready()) {
+      if (btif_av_stream_ready(A2dpType::kSource)) {
         /* Setup audio data channel listener */
         UIPC_Open(*a2dp_uipc, UIPC_CH_ID_AV_AUDIO, btif_a2dp_data_cb,
                   A2DP_DATA_PATH);
@@ -137,13 +137,13 @@ static void btif_a2dp_recv_ctrl_data(void) {
          * If we are the source, the ACK will be sent after the start
          * procedure is completed, othewise send it now.
          */
-        btif_av_stream_start();
-        if (btif_av_get_peer_sep() == AVDT_TSEP_SRC)
+        btif_av_stream_start(A2dpType::kSource);
+        if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SRC)
           btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
         break;
       }
 
-      if (btif_av_stream_started_ready()) {
+      if (btif_av_stream_started_ready(A2dpType::kSource)) {
         /*
          * Already started, setup audio data channel listener and ACK
          * back immediately.
@@ -159,7 +159,7 @@ static void btif_a2dp_recv_ctrl_data(void) {
       break;
 
     case A2DP_CTRL_CMD_STOP:
-      if (btif_av_get_peer_sep() == AVDT_TSEP_SNK &&
+      if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SNK &&
           !btif_a2dp_source_is_streaming()) {
         /* We are already stopped, just ack back */
         btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
@@ -171,7 +171,7 @@ static void btif_a2dp_recv_ctrl_data(void) {
 
     case A2DP_CTRL_CMD_SUSPEND:
       /* Local suspend */
-      if (btif_av_stream_started_ready()) {
+      if (btif_av_stream_started_ready(A2dpType::kSource)) {
         btif_av_stream_suspend();
         break;
       }
@@ -179,7 +179,7 @@ static void btif_a2dp_recv_ctrl_data(void) {
        * audioflinger close the channel. This can happen if we are
        * remotely suspended, clear REMOTE SUSPEND flag.
        */
-      btif_av_clear_remote_suspend_flag();
+      btif_av_clear_remote_suspend_flag(A2dpType::kSource);
       btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
       break;
 
@@ -369,7 +369,7 @@ static void btif_a2dp_data_cb(UNUSED_ATTR tUIPC_CH_ID ch_id,
       UIPC_Ioctl(*a2dp_uipc, UIPC_CH_ID_AV_AUDIO, UIPC_SET_READ_POLL_TMO,
                  reinterpret_cast<void*>(A2DP_DATA_READ_POLL_MS));
 
-      if (btif_av_get_peer_sep() == AVDT_TSEP_SNK) {
+      if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SNK) {
         /* Start the media task to encode the audio */
         btif_a2dp_source_start_audio_req();
       }

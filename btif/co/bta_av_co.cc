@@ -261,7 +261,7 @@ tA2DP_STATUS BtaAvCo::ProcessSourceGetConfig(
       return A2DP_FAIL;
     }
   } else {
-    if (btif_av_peer_prefers_mandatory_codec(p_peer->addr)) {
+    if (btif_av_peer_prefers_mandatory_codec(p_peer->addr, A2dpType::kSource)) {
       // Apply user preferred codec directly before first codec selected.
       p_sink = peer_cache_->FindPeerSink(p_peer, BTAV_A2DP_CODEC_INDEX_SOURCE_SBC, ContentProtectFlag());
       if (p_sink != nullptr) {
@@ -708,7 +708,7 @@ void BtaAvCo::ProcessAudioDelay(tBTA_AV_HNDL bta_av_handle,
   APPL_TRACE_DEBUG("%s: peer %s bta_av_handle: 0x%x delay:0x%x", __func__,
                    peer_address.ToString().c_str(), bta_av_handle, delay);
 
-  btif_av_set_audio_delay(peer_address, delay);
+  btif_av_set_audio_delay(peer_address, delay, A2dpType::kSource);
 }
 
 void BtaAvCo::UpdateMtu(tBTA_AV_HNDL bta_av_handle,
@@ -787,9 +787,9 @@ void BtaAvCo::GetPeerEncoderParameters(
     if (p_peer->mtu < min_mtu) min_mtu = p_peer->mtu;
   }
   p_peer_params->peer_mtu = min_mtu;
-  p_peer_params->is_peer_edr = btif_av_is_peer_edr(peer_address);
+  p_peer_params->is_peer_edr = btif_av_is_peer_edr(peer_address, A2dpType::kSource);
   p_peer_params->peer_supports_3mbps =
-      btif_av_peer_supports_3mbps(peer_address);
+      btif_av_peer_supports_3mbps(peer_address, A2dpType::kSource);
   APPL_TRACE_DEBUG(
       "%s: peer_address=%s peer_mtu=%d is_peer_edr=%s peer_supports_3mbps=%s",
       __func__, peer_address.ToString().c_str(), p_peer_params->peer_mtu,

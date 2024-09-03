@@ -531,7 +531,7 @@ static void btif_a2dp_sink_on_decode_complete(uint8_t* data, uint32_t len) {
 // Must be called while locked.
 static void btif_a2dp_sink_handle_inc_media(BT_HDR* p_msg) {
   LOG_ERROR(LOG_TAG, "%s: decoding ", __func__);
-  if ((btif_av_get_peer_sep() == AVDT_TSEP_SNK) ||
+  if ((btif_av_get_peer_sep(A2dpType::kSink) == AVDT_TSEP_SNK) ||
       (btif_a2dp_sink_cb.rx_flush)) {
     APPL_TRACE_DEBUG("%s: state changed happened in this tick", __func__);
     return;

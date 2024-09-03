@@ -442,7 +442,7 @@ uint8_t btif_a2dp_audio_process_request(uint8_t cmd) {
         status = A2DP_CTRL_ACK_INCALL_FAILURE;
         break;
       }
-      if (btif_av_stream_started_ready()) {
+      if (btif_av_stream_started_ready(A2dpType::kSource)) {
         /*
          * Already started, setup audio data channel listener and ACK
          * back immediately.
@@ -450,14 +450,14 @@ uint8_t btif_a2dp_audio_process_request(uint8_t cmd) {
         status = A2DP_CTRL_ACK_SUCCESS;
         break;
       }
-      if (btif_av_stream_ready()) {
+      if (btif_av_stream_ready(A2dpType::kSource)) {
         /*
          * Post start event and wait for audio path to open.
          * If we are the source, the ACK will be sent after the start
          * procedure is completed, othewise send it now.
          */
-        btif_av_stream_start();
-        if (btif_av_get_peer_sep() == AVDT_TSEP_SRC) {
+        btif_av_stream_start(A2dpType::kSource);
+        if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SRC) {
           status = A2DP_CTRL_ACK_SUCCESS;
           break;
         }
@@ -473,7 +473,7 @@ uint8_t btif_a2dp_audio_process_request(uint8_t cmd) {
       break;
 
     case A2DP_CTRL_CMD_STOP:
-      if (btif_av_get_peer_sep() == AVDT_TSEP_SNK &&
+      if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SNK &&
           !btif_a2dp_source_is_streaming()) {
         /* We are already stopped, just ack back */
         status = A2DP_CTRL_ACK_SUCCESS;
@@ -485,7 +485,7 @@ uint8_t btif_a2dp_audio_process_request(uint8_t cmd) {
 
     case A2DP_CTRL_CMD_SUSPEND:
       /* Local suspend */
-      if (btif_av_stream_started_ready()) {
+      if (btif_av_stream_started_ready(A2dpType::kSource)) {
         btif_av_stream_suspend();
         status = A2DP_CTRL_ACK_PENDING;
         break;
@@ -494,7 +494,7 @@ uint8_t btif_a2dp_audio_process_request(uint8_t cmd) {
        * audioflinger close the channel. This can happen if we are
        * remotely suspended, clear REMOTE SUSPEND flag.
        */
-      btif_av_clear_remote_suspend_flag();
+      btif_av_clear_remote_suspend_flag(A2dpType::kSource);
       status = A2DP_CTRL_ACK_SUCCESS;
       break;
 
