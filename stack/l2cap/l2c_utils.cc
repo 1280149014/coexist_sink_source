@@ -39,6 +39,7 @@
 #include "l2c_int.h"
 #include "l2cdefs.h"
 #include "osi/include/allocator.h"
+#include "btif_av.h"
 
 /*******************************************************************************
  *
@@ -122,7 +123,7 @@ void l2cu_update_lcb_4_bonding(const RawAddress& p_bd_addr, bool is_bonding) {
   tL2C_LCB* p_lcb = l2cu_find_lcb_by_bd_addr(p_bd_addr, BT_TRANSPORT_BR_EDR);
 
   if (p_lcb) {
-    LOG(ERROR) << __func__ << " BDA: " << p_bd_addr
+    VLOG(1) << __func__ << " BDA: " << p_bd_addr
             << " is_bonding: " << is_bonding;
     p_lcb->is_bonding = is_bonding;
   }
@@ -2356,6 +2357,8 @@ bool l2cu_set_acl_priority(const RawAddress& bd_addr, uint8_t priority,
   tL2C_LCB* p_lcb;
   uint8_t* pp;
   uint8_t command[HCI_BRCM_ACL_PRIORITY_PARAM_SIZE];
+  uint8_t command_a2dp_sink[HCI_BRCM_ACL_PRIORITY_A2DP_PARAM_SIZE];
+  uint8_t type_param;
   uint8_t vs_param;
 
   APPL_TRACE_EVENT("SET ACL PRIORITY %d", priority);
@@ -2367,22 +2370,38 @@ bool l2cu_set_acl_priority(const RawAddress& bd_addr, uint8_t priority,
     return (false);
   }
 
-  if (BTM_IS_BRCM_CONTROLLER()) {
+  if (BTM_IS_BRCM_CONTROLLER() || BTM_IS_CYPRESS_CONTROLLER()) {
     /* Called from above L2CAP through API; send VSC if changed */
     if ((!reset_after_rs && (priority != p_lcb->acl_priority)) ||
         /* Called because of a master/slave role switch; if high resend VSC */
         (reset_after_rs && p_lcb->acl_priority == L2CAP_PRIORITY_HIGH)) {
-      pp = command;
+      if (btif_av_is_sink_enabled() && btif_av_is_connected()) {
+          pp = command_a2dp_sink;
+          vs_param = (priority == L2CAP_PRIORITY_HIGH) ? HCI_BRCM_ACL_PRIORITY_A2DP
+                                                       : HCI_BRCM_ACL_PRIORITY_NORMAL;
+          type_param = 0x01;
 
-      vs_param = (priority == L2CAP_PRIORITY_HIGH) ? HCI_BRCM_ACL_PRIORITY_HIGH
-                                                   : HCI_BRCM_ACL_PRIORITY_LOW;
+          UINT16_TO_STREAM(pp, p_lcb->handle);
+          UINT8_TO_STREAM(pp, vs_param);
+          UINT8_TO_STREAM(pp, type_param);
 
-      UINT16_TO_STREAM(pp, p_lcb->handle);
-      UINT8_TO_STREAM(pp, vs_param);
+          BTM_VendorSpecificCommand(HCI_BRCM_SET_A2DP_PRIORITY,
+                                    HCI_BRCM_ACL_PRIORITY_A2DP_PARAM_SIZE,
+                                    command_a2dp_sink,
+                                    NULL);
+      } else {
+          pp = command;
 
-      BTM_VendorSpecificCommand(HCI_BRCM_SET_ACL_PRIORITY,
-                                HCI_BRCM_ACL_PRIORITY_PARAM_SIZE, command,
-                                NULL);
+          vs_param = (priority == L2CAP_PRIORITY_HIGH) ? HCI_BRCM_ACL_PRIORITY_HIGH
+                                                       : HCI_BRCM_ACL_PRIORITY_LOW;
+
+          UINT16_TO_STREAM(pp, p_lcb->handle);
+          UINT8_TO_STREAM(pp, vs_param);
+
+          BTM_VendorSpecificCommand(HCI_BRCM_SET_ACL_PRIORITY,
+                                    HCI_BRCM_ACL_PRIORITY_PARAM_SIZE, command,
+                                    NULL);
+      }
     }
   }
 

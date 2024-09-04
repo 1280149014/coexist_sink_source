@@ -1242,6 +1242,11 @@ typedef struct {
 #define HCI_BRCM_ACL_PRIORITY_HIGH 0xFF
 #define HCI_BRCM_SET_ACL_PRIORITY (0x0057 | HCI_GRP_VENDOR_SPECIFIC)
 
+#define HCI_BRCM_SET_A2DP_PRIORITY          (0x011A | HCI_GRP_VENDOR_SPECIFIC)
+#define HCI_BRCM_ACL_PRIORITY_NORMAL        0x00
+#define HCI_BRCM_ACL_PRIORITY_A2DP          0x01
+#define HCI_BRCM_ACL_PRIORITY_A2DP_PARAM_SIZE    4
+
 /* Define values for LMP Test Control parameters
  * Test Scenario, Hopping Mode, Power Control Mode
 */
@@ -1271,6 +1276,7 @@ typedef struct {
 
 // TODO(zachoverflow): remove this once broadcom specific hacks are removed
 #define LMP_COMPID_BROADCOM 15
+#define LMP_COMPID_CYPRESS  305
 
 /*
  * Define the packet types in the packet header, and a couple extra
