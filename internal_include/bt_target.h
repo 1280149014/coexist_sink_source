@@ -479,6 +479,12 @@
 #define MAX_L2CAP_LINKS MAX_ACL_CONNECTIONS
 #endif
 
+#ifndef CONFIG_BT_CLASSICAL_MAX_ACL
+#define MAX_BR_EDR_ACL_CONNECTIONS 2
+#else 
+#define MAX_BR_EDR_ACL_CONNECTIONS CONFIG_BT_CLASSICAL_MAX_ACL
+#endif
+
 /* The maximum number of simultaneous channels that L2CAP can support. */
 #ifndef MAX_L2CAP_CHANNELS
 #define MAX_L2CAP_CHANNELS 32

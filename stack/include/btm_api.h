@@ -813,6 +813,18 @@ extern tBTM_STATUS BTM_RegBusyLevelNotif(tBTM_BL_CHANGE_CB* p_cb,
  ******************************************************************************/
 extern uint16_t BTM_GetNumAclLinks(void);
 
+/*******************************************************************************
+ *
+ * Function         BTM_GetNumAclLinks
+ *
+ * Description      This function is called to count the number of
+ *                  ACL links that are active.
+ *
+ * Returns          uint16_t Number of active ACL links
+ *
+ ******************************************************************************/
+extern uint16_t BTM_GetNumAclLinksByTransport(tBT_TRANSPORT transport);
+
 /*****************************************************************************
  *  (e)SCO CHANNEL MANAGEMENT FUNCTIONS
  ****************************************************************************/

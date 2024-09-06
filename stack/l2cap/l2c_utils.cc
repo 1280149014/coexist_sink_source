@@ -71,7 +71,14 @@ tL2C_LCB* l2cu_allocate_lcb(const RawAddress& p_bd_addr, bool is_bonding,
   int xx;
   tL2C_LCB* p_lcb = &l2cb.lcb_pool[0];
 
-  for (xx = 0; xx < MAX_L2CAP_LINKS; xx++, p_lcb++) {
+    UINT8 acl_connects;
+    acl_connects = BTM_GetNumAclLinksByTransport(BT_TRANSPORT_BR_EDR);
+    if ((transport == BT_TRANSPORT_BR_EDR) && (acl_connects >= MAX_BR_EDR_ACL_CONNECTIONS)) {
+        L2CAP_TRACE_WARNING("l2cu_allocate_lcb fail acl connects:%d max acl:%d",
+                acl_connects, MAX_BR_EDR_ACL_CONNECTIONS);
+        return (NULL);
+    }
+    for (xx = 0; xx < MAX_L2CAP_LINKS; xx++, p_lcb++) {
     if (!p_lcb->in_use) {
       alarm_free(p_lcb->l2c_lcb_timer);
       alarm_free(p_lcb->info_resp_timer);

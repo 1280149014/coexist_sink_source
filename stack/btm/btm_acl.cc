@@ -1345,6 +1345,25 @@ bool BTM_IsAclConnectionUp(const RawAddress& remote_bda,
  * Returns          uint16_t Number of active ACL links
  *
  ******************************************************************************/
+uint16_t BTM_GetNumAclLinksByTransport(tBT_TRANSPORT transport) {
+  uint16_t num_acl = 0;
+
+  for (uint16_t i = 0; i < MAX_L2CAP_LINKS; ++i) {
+    if (btm_cb.acl_db[i].in_use &&  transport == l2cb.lcb_pool[i].transport) ++num_acl;
+  }
+  return num_acl;
+}
+
+/*******************************************************************************
+ *
+ * Function         BTM_GetNumAclLinks
+ *
+ * Description      This function is called to count the number of
+ *                  ACL links that are active.
+ *
+ * Returns          uint16_t Number of active ACL links
+ *
+ ******************************************************************************/
 uint16_t BTM_GetNumAclLinks(void) {
   uint16_t num_acl = 0;
 
