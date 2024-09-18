@@ -1754,14 +1754,8 @@ static void btif_dm_upstreams_evt(uint16_t event, char* p_param) {
     case BTA_DM_LINK_DOWN_EVT:
       bd_addr = p_data->link_down.bd_addr;
       btm_set_bond_type_dev(p_data->link_down.bd_addr, BOND_TYPE_UNKNOWN);
-      //btif_av_acl_disconnected(bd_addr);
-      //if (com::android::bluetooth::flags::a2dp_concurrent_source_sink()) {
-      if(1) {
-        btif_av_acl_disconnected(bd_addr, A2dpType::kSource);
-        btif_av_acl_disconnected(bd_addr, A2dpType::kSink);
-      } else {
-        btif_av_acl_disconnected(bd_addr, A2dpType::kUnknown);
-      }
+      btif_av_acl_disconnected(bd_addr, A2dpType::kSource);
+      btif_av_acl_disconnected(bd_addr, A2dpType::kSink);
       BTIF_TRACE_DEBUG(
           "BTA_DM_LINK_DOWN_EVT. Sending BT_ACL_STATE_DISCONNECTED");
       HAL_CBACK(bt_hal_cbacks, acl_state_changed_cb, BT_STATUS_SUCCESS,

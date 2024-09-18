@@ -71,7 +71,7 @@ tL2C_LCB* l2cu_allocate_lcb(const RawAddress& p_bd_addr, bool is_bonding,
   int xx;
   tL2C_LCB* p_lcb = &l2cb.lcb_pool[0];
 
-    UINT8 acl_connects;
+    uint16_t acl_connects;
     acl_connects = BTM_GetNumAclLinksByTransport(BT_TRANSPORT_BR_EDR);
     if ((transport == BT_TRANSPORT_BR_EDR) && (acl_connects >= MAX_BR_EDR_ACL_CONNECTIONS)) {
         L2CAP_TRACE_WARNING("l2cu_allocate_lcb fail acl connects:%d max acl:%d",
@@ -2362,11 +2362,11 @@ bool l2cu_lcb_disconnecting(void) {
 bool l2cu_set_acl_priority(const RawAddress& bd_addr, uint8_t priority,
                            bool reset_after_rs) {
   tL2C_LCB* p_lcb;
-  uint8_t* pp;
-  uint8_t command[HCI_BRCM_ACL_PRIORITY_PARAM_SIZE];
-  uint8_t command_a2dp_sink[HCI_BRCM_ACL_PRIORITY_A2DP_PARAM_SIZE];
-  uint8_t type_param;
-  uint8_t vs_param;
+  //uint8_t* pp;
+  //uint8_t command[HCI_BRCM_ACL_PRIORITY_PARAM_SIZE];
+  //uint8_t command_a2dp_sink[HCI_BRCM_ACL_PRIORITY_A2DP_PARAM_SIZE];
+  //uint8_t type_param;
+  //uint8_t vs_param;
 
   APPL_TRACE_EVENT("SET ACL PRIORITY %d", priority);
 
@@ -2377,10 +2377,10 @@ bool l2cu_set_acl_priority(const RawAddress& bd_addr, uint8_t priority,
     return (false);
   }
 
-  if (BTM_IS_BRCM_CONTROLLER() || BTM_IS_CYPRESS_CONTROLLER()) {
-    /* Called from above L2CAP through API; send VSC if changed */
+  /*if (BTM_IS_BRCM_CONTROLLER() || BTM_IS_CYPRESS_CONTROLLER()) {
+    // Called from above L2CAP through API; send VSC if changed 
     if ((!reset_after_rs && (priority != p_lcb->acl_priority)) ||
-        /* Called because of a master/slave role switch; if high resend VSC */
+        //Called because of a master/slave role switch; if high resend VSC 
         (reset_after_rs && p_lcb->acl_priority == L2CAP_PRIORITY_HIGH)) {
       if (btif_av_is_sink_enabled() && btif_av_is_connected()) {
           pp = command_a2dp_sink;
@@ -2410,7 +2410,7 @@ bool l2cu_set_acl_priority(const RawAddress& bd_addr, uint8_t priority,
                                     NULL);
       }
     }
-  }
+  }*/
 
   /* Adjust lmp buffer allocation for this channel if priority changed */
   if (p_lcb->acl_priority != priority) {

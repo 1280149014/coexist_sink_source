@@ -163,6 +163,7 @@ BtaAvCoSep* BtaAvCoPeerCache::FindPeerSink(BtaAvCoPeer* p_peer,
   }
   return nullptr;
 }
+
 BtaAvCoPeer* BtaAvCoPeerCache::FindPeer(tBTA_AV_HNDL bta_av_handle) {
   uint8_t index;
   index = BTA_AV_CO_AUDIO_HANDLE_TO_INDEX(bta_av_handle);

@@ -256,16 +256,6 @@ bool btif_a2dp_sink_restart_session(const RawAddress& old_peer_address,
   }
 
 
-  //if (!IS_FLAG_ENABLED(a2dp_concurrent_source_sink)) {
-   /* if(0) {
-    if (!bta_av_co_set_active_peer(new_peer_address)) {
-      LOG(ERROR) << __func__
-                 << ": Cannot stream audio: cannot set active peer to "
-                 << ADDRESS_TO_LOGGABLE_STR(new_peer_address);
-      peer_ready_promise.set_value();
-      return false;
-    }
-  } else */ 
     if (!bta_av_co_set_active_sink_peer(new_peer_address)) {
       LOG(ERROR) << __func__
                  << ": Cannot stream audio: cannot set active peer to "

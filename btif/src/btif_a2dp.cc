@@ -39,21 +39,10 @@
 void btif_a2dp_on_idle(const RawAddress& peer_addr, const A2dpType local_a2dp_type) {
   LOG_INFO(LOG_TAG, "%s: ## ON A2DP IDLE ## peer_sep = %d", __func__,
            btif_av_get_peer_sep(local_a2dp_type));
-  if(btif_av_src_sink_coexist_enabled()) {
-    bool is_sink = btif_av_peer_is_sink(peer_addr);
-    bool is_source = btif_av_peer_is_source(peer_addr);
-    LOG_INFO(LOG_TAG, "## ON A2DP IDLE ## is_sink:%d is_source:%d", is_sink, is_source);
-    if(is_sink) {
-      btif_a2dp_source_on_idle();
-    } else if (is_source){
-      btif_a2dp_sink_on_idle();
-    }
-  } else {
     if (btif_av_get_peer_sep(local_a2dp_type) == AVDT_TSEP_SNK) {
       btif_a2dp_source_on_idle();
     } else if (btif_av_get_peer_sep(local_a2dp_type) == AVDT_TSEP_SRC) {
       btif_a2dp_sink_on_idle();
-    }
   }
 }
 
@@ -129,12 +118,15 @@ void btif_a2dp_on_stopped(tBTA_AV_SUSPEND* p_av_suspend, const A2dpType local_a2
     btif_a2dp_sink_on_stopped(p_av_suspend);
     return;
   }
-  if (bluetooth::audio::a2dp::is_hal_2_0_enabled() ||
-      !btif_av_is_a2dp_offload_running()) {
-    btif_a2dp_source_on_stopped(p_av_suspend);
-  } else if (p_av_suspend != NULL) {
-    // TODO: BluetoothA2dp@1.0 is deprecated
-    btif_a2dp_audio_on_stopped(p_av_suspend->status);
+
+  if (btif_av_get_peer_sep(local_a2dp_type) == AVDT_TSEP_SNK) {
+    if (bluetooth::audio::a2dp::is_hal_2_0_enabled() ||
+        !btif_av_is_a2dp_offload_running()) {
+      btif_a2dp_source_on_stopped(p_av_suspend);
+    } else if (p_av_suspend != NULL) {
+      // TODO: BluetoothA2dp@1.0 is deprecated
+      btif_a2dp_audio_on_stopped(p_av_suspend->status);
+    }
   }
 }
 
@@ -146,12 +138,14 @@ void btif_a2dp_on_suspended(tBTA_AV_SUSPEND* p_av_suspend,
     btif_a2dp_sink_on_suspended(p_av_suspend);
     return;
   }
-  if (bluetooth::audio::a2dp::is_hal_2_0_enabled() ||
-      !btif_av_is_a2dp_offload_running()) {
-    btif_a2dp_source_on_suspended(p_av_suspend);
-  } else if (p_av_suspend != NULL) {
-    // TODO: BluetoothA2dp@1.0 is deprecated
-    btif_a2dp_audio_on_suspended(p_av_suspend->status);
+  if (btif_av_get_peer_sep(local_a2dp_type) == AVDT_TSEP_SNK) {
+    if (bluetooth::audio::a2dp::is_hal_2_0_enabled() ||
+        !btif_av_is_a2dp_offload_running()) {
+      btif_a2dp_source_on_suspended(p_av_suspend);
+    } else if (p_av_suspend != NULL) {
+      // TODO: BluetoothA2dp@1.0 is deprecated
+      btif_a2dp_audio_on_suspended(p_av_suspend->status);
+    }
   }
 }
 
