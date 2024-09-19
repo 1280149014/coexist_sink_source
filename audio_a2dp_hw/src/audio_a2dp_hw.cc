@@ -750,28 +750,34 @@ static int a2dp_get_presentation_position_cmd(struct a2dp_stream_common* common,
                                               struct timespec* timestamp) {
   if ((common->ctrl_fd == AUDIO_SKT_DISCONNECTED) ||
       (common->state != AUDIO_A2DP_STATE_STARTED)) {  // Audio is not streaming
+      ERROR("get presentation position failed, audio not started");
     return -1;
   }
 
   if (a2dp_command(common, A2DP_CTRL_GET_PRESENTATION_POSITION) < 0) {
+    ERROR("get presentation position failed");
     return -1;
   }
 
   if (a2dp_ctrl_receive(common, bytes, sizeof(*bytes)) < 0) {
+    ERROR("get bytes size failed");
     return -1;
   }
 
   if (a2dp_ctrl_receive(common, delay, sizeof(*delay)) < 0) {
+    ERROR("get delay failed");
     return -1;
   }
 
   uint32_t seconds;
   if (a2dp_ctrl_receive(common, &seconds, sizeof(seconds)) < 0) {
+    ERROR("get timestamp failed");
     return -1;
   }
 
   uint32_t nsec;
   if (a2dp_ctrl_receive(common, &nsec, sizeof(nsec)) < 0) {
+    ERROR("get timestamp failed");
     return -1;
   }
 

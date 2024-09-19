@@ -108,6 +108,8 @@ static void btif_a2dp_recv_ctrl_data(void) {
       break;
 
     case A2DP_CTRL_CMD_START:
+      APPL_TRACE_WARNING("%s: A2DP command %s start",
+                           __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
       /*
        * Don't send START request to stack while we are in a call.
        * Some headsets such as "Sony MW600", don't allow AVDTP START
@@ -116,12 +118,14 @@ static void btif_a2dp_recv_ctrl_data(void) {
       if (!bluetooth::headset::IsCallIdle()) {
         APPL_TRACE_WARNING("%s: A2DP command %s while call state is busy",
                            __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
+         APPL_TRACE_WARNING("%s: A2DP command %s failed",
+                           __func__, audio_a2dp_hw_dump_ctrl_event(cmd));            
         btif_a2dp_command_ack(A2DP_CTRL_ACK_INCALL_FAILURE);
         break;
       }
 
       if (btif_a2dp_source_is_streaming()) {
-        APPL_TRACE_WARNING("%s: A2DP command %s while source is streaming",
+        APPL_TRACE_WARNING("%s: A2DP command %s while source is streaming failure",
                            __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
         btif_a2dp_command_ack(A2DP_CTRL_ACK_FAILURE);
         break;
@@ -131,15 +135,19 @@ static void btif_a2dp_recv_ctrl_data(void) {
         /* Setup audio data channel listener */
         UIPC_Open(*a2dp_uipc, UIPC_CH_ID_AV_AUDIO, btif_a2dp_data_cb,
                   A2DP_DATA_PATH);
-
+        APPL_TRACE_WARNING("%s: A2DP command %s while btif_av_stream_ready success",
+                           __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
         /*
          * Post start event and wait for audio path to open.
          * If we are the source, the ACK will be sent after the start
          * procedure is completed, othewise send it now.
          */
         btif_av_stream_start(A2dpType::kSource);
-        if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SRC)
+        if (btif_av_get_peer_sep(A2dpType::kSource) != AVDT_TSEP_SRC){
+          APPL_TRACE_WARNING("%s: A2DP command %s  btif_av_get_peer_sep != AVDT_TSEP_SRC",
+                           __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
           btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
+        }
         break;
       }
 
