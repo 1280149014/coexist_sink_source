@@ -109,3 +109,4 @@ LD_LIBRARY_PATH=./ ./bluetoothtbd -create-ipc-socket=fluoride
 
 5. Goto Behaviour tab, change clean command to "-t clean"
 
+# coexist_sink_source
