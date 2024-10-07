@@ -147,6 +147,10 @@ static void btif_a2dp_recv_ctrl_data(void) {
           APPL_TRACE_WARNING("%s: A2DP command %s  btif_av_get_peer_sep != AVDT_TSEP_SRC",
                            __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
           btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
+        } else {
+                    APPL_TRACE_WARNING("%s: A2DP command %s  btif_av_get_peer_sep == AVDT_TSEP_SRC",
+                           __func__, audio_a2dp_hw_dump_ctrl_event(cmd));
+          btif_a2dp_command_ack(A2DP_CTRL_ACK_SUCCESS);
         }
         break;
       }

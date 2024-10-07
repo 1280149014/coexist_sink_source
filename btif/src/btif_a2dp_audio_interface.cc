@@ -457,7 +457,7 @@ uint8_t btif_a2dp_audio_process_request(uint8_t cmd) {
          * procedure is completed, othewise send it now.
          */
         btif_av_stream_start(A2dpType::kSource);
-        if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SRC) {
+        if (btif_av_get_peer_sep(A2dpType::kSource) == AVDT_TSEP_SNK) {
           status = A2DP_CTRL_ACK_SUCCESS;
           break;
         }
