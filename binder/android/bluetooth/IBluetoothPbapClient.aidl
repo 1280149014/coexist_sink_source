@@ -17,6 +17,7 @@
 package android.bluetooth;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.IBluetoothPbapClientListener;
 
 /**
  * API for Bluetooth Phone Book Access Provile Client Side
@@ -31,4 +32,6 @@ interface IBluetoothPbapClient {
     int getConnectionState(in BluetoothDevice device);
     boolean setConnectionPolicy(in BluetoothDevice device, int connectionPolicy);
     int getConnectionPolicy(in BluetoothDevice device);
+    void registerListener(in IBluetoothPbapClientListener listener);
+    void unregisterListener(in IBluetoothPbapClientListener listener);
 }
