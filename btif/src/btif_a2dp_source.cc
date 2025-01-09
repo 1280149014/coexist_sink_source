@@ -21,6 +21,7 @@
 #define ATRACE_TAG ATRACE_TAG_AUDIO
 #define ADDRESS_TO_LOGGABLE_CSTR(addr) addr.ToString().c_str()
 
+
 #include <base/run_loop.h>
 #ifndef OS_GENERIC
 #include <cutils/trace.h>
@@ -63,6 +64,11 @@ extern std::unique_ptr<tUIPC_STATE> a2dp_uipc;
  * layers we might need to temporarily buffer up data.
  */
 #define MAX_OUTPUT_A2DP_FRAME_QUEUE_SZ (MAX_PCM_FRAME_NUM_PER_TICK * 2)
+
+#if (DUMP_PCM_DATA == TRUE)
+FILE* inputPcmSampleFile;
+char inputFilename[50] = "/data/misc/bluedroid/a2dp_src_input_sample.pcm";
+#endif
 
 class SchedulingStats {
  public:
@@ -586,7 +592,6 @@ static void btif_a2dp_source_setup_codec_delayed(
               __func__);
     return;
   }
-
   A2dpCodecConfig* a2dp_codec_config = bta_av_get_a2dp_current_codec();
   if (a2dp_codec_config == nullptr) {
     LOG_ERROR(LOG_TAG, "%s: Cannot stream audio: current codec is not set",
@@ -803,6 +808,9 @@ static void btif_a2dp_source_audio_tx_start_event(void) {
   /* audio engine starting, reset tx suspended flag */
   btif_a2dp_source_cb.tx_flush = false;
 
+  #if (DUMP_PCM_DATA == TRUE)
+      inputPcmSampleFile = fopen(inputFilename, "ab");
+  #endif
   wakelock_acquire();
   btif_a2dp_source_cb.media_alarm.SchedulePeriodic(
       btif_a2dp_source_thread.GetWeakPtr(), FROM_HERE,
@@ -884,11 +892,18 @@ static void btif_a2dp_source_audio_tx_stop_event(void) {
   /* Reset the media feeding state */
   if (btif_a2dp_source_cb.encoder_interface != nullptr)
     btif_a2dp_source_cb.encoder_interface->feeding_reset();
+
+  #if (DUMP_PCM_DATA == TRUE)
+  if (inputPcmSampleFile) {
+    fclose(inputPcmSampleFile);
+  }
+  inputPcmSampleFile = NULL;
+  #endif
 }
 
 static void btif_a2dp_source_audio_handle_timer(void) {
   if (btif_av_is_a2dp_offload_running()) return;
-
+  LOG_DEBUG(LOG_TAG, "%s", __func__);
   uint64_t timestamp_us = bluetooth::common::time_get_os_boottime_us();
   log_tstamps_us("A2DP Source tx timer", timestamp_us);
 
@@ -925,6 +940,11 @@ static uint32_t btif_a2dp_source_read_callback(uint8_t* p_buf, uint32_t len) {
     bytes_read = UIPC_Read(*a2dp_uipc, UIPC_CH_ID_AV_AUDIO, &event, p_buf, len);
   }
 
+#if (DUMP_PCM_DATA == TRUE)
+  if (inputPcmSampleFile) {
+    fwrite((p_buf), 1, (size_t)len, inputPcmSampleFile);
+  }
+#endif
   if (bytes_read < len) {
     BTIF_TRACE_WARNING("%s: UNDERFLOW: ONLY READ %d BYTES OUT OF %d", __func__,
              bytes_read, len);
@@ -951,7 +971,7 @@ static bool btif_a2dp_source_enqueue_callback(BT_HDR* p_buf, size_t frames_n,
     osi_free(p_buf);
     return false;
   }
-
+  LOG_VERBOSE(LOG_TAG, "%s: frames_n = %zu ,  bytes_read = %x", __func__, frames_n, bytes_read);
   /* Check if the transmission queue has been flushed */
   if (btif_a2dp_source_cb.tx_flush) {
     LOG_VERBOSE(LOG_TAG, "%s: tx suspended, discarded frame", __func__);
@@ -1032,7 +1052,10 @@ static bool btif_a2dp_source_enqueue_callback(BT_HDR* p_buf, size_t frames_n,
   CHECK(btif_a2dp_source_cb.encoder_interface != nullptr);
 
   fixed_queue_enqueue(btif_a2dp_source_cb.tx_audio_queue, p_buf);
-
+  BTIF_TRACE_WARNING("%s: ylq 1111111 TX queue buffer size now=%u adding=%u max=%d",
+             __func__,
+             (uint32_t)fixed_queue_length(btif_a2dp_source_cb.tx_audio_queue),
+             (uint32_t)frames_n, MAX_OUTPUT_A2DP_FRAME_QUEUE_SZ);
   return true;
 }
 
