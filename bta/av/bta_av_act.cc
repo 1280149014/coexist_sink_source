@@ -2214,7 +2214,7 @@ void bta_av_rc_disc_done(UNUSED_ATTR tBTA_AV_DATA* p_data) {
         bta_avk_check_peer_features(UUID_SERVCLASS_AV_REMOTE_CONTROL))
       peer_features |= (BTA_AV_FEAT_ADV_CTRL | BTA_AV_FEAT_RCCT);
 
-    if (peer_features & BTA_AV_FEAT_COVER_ARTWORK)
+    if (peer_features/* & BTA_AV_FEAT_COVER_ARTWORK*/)
       cover_art_psm = bta_avk_get_cover_art_psm();
 
     APPL_TRACE_DEBUG("%s: populating rem ctrl target bip psm 0x%x", __func__,
