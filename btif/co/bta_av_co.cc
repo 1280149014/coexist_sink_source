@@ -1120,7 +1120,7 @@ const BtaAvCoSep* BtaAvCo::AttemptSinkCodecSelection(
     const A2dpCodecConfig& codec_config, BtaAvCoPeer* p_peer) {
   uint8_t new_codec_config[AVDT_CODEC_SIZE];
 
-  APPL_TRACE_DEBUG("%s", __func__);
+  APPL_TRACE_DEBUG("%s [1]", __func__);
 
   // Find the peer Source for the codec
   BtaAvCoSep* p_source = 
@@ -1128,6 +1128,10 @@ const BtaAvCoSep* BtaAvCo::AttemptSinkCodecSelection(
   if (p_source == nullptr) {
     APPL_TRACE_DEBUG("%s: peer Source for codec %s not found", __func__,
                      codec_config.name().c_str());
+    return nullptr;
+  }
+  if (codec_config.codecIndex() != BTAV_A2DP_CODEC_INDEX_SINK_SBC)
+  {
     return nullptr;
   }
   if (!p_peer->GetCodecs()->setSinkCodecConfig(
