@@ -2027,8 +2027,8 @@ void bta_av_rc_disc_done_all(UNUSED_ATTR tBTA_AV_DATA* p_data) {
     if (BTA_AV_FEAT_ADV_CTRL &
         bta_avk_check_peer_features(UUID_SERVCLASS_AV_REMOTE_CONTROL))
       peer_tg_features |= (BTA_AV_FEAT_ADV_CTRL | BTA_AV_FEAT_RCCT);
-    if (peer_tg_features & BTA_AV_FEAT_COVER_ARTWORK)
-      cover_art_psm = bta_avk_get_cover_art_psm();
+    // if (peer_tg_features & BTA_AV_FEAT_COVER_ARTWORK)
+    cover_art_psm = bta_avk_get_cover_art_psm();
     APPL_TRACE_DEBUG("%s: populating rem ctrl target bip psm 0x%x", __func__,
                      cover_art_psm);
   } else if (p_cb->sdp_a2dp_handle) {

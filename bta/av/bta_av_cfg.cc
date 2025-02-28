@@ -41,7 +41,8 @@
 const uint32_t bta_av_meta_caps_co_ids[] = {AVRC_CO_METADATA, AVRC_CO_BROADCOM};
 
 /* AVRCP supported categories */
-#define BTA_AV_RC_SUPF_CT (AVRC_SUPF_CT_CAT2)
+#define BTA_AV_RC_SUPF_CT (AVRC_SUPF_CT_CAT2 | \
+   AVRC_SUPF_CT_COVER_ART_GET_IMAGE_PROP | AVRC_SUPF_CT_COVER_ART_GET_IMAGE)
 #define BTA_AVK_RC_SUPF_CT                   \
   (AVRC_SUPF_CT_CAT1 | AVRC_SUPF_CT_BROWSE | \
    AVRC_SUPF_CT_COVER_ART_GET_IMAGE_PROP | AVRC_SUPF_CT_COVER_ART_GET_IMAGE)
@@ -161,7 +162,7 @@ const tBTA_AV_CFG bta_avk_cfg = {
     AVRC_CO_METADATA,      /* AVRCP Company ID */
     512,                   /* AVRCP MTU at L2CAP for control channel */
     BTA_AV_MAX_RC_BR_MTU,  /* AVRCP MTU at L2CAP for browsing channel */
-    BTA_AVK_RC_SUPF_CT_V15,    /* AVRCP controller categories */
+    BTA_AVK_RC_SUPF_CT,    /* AVRCP controller categories */
     BTA_AVK_RC_SUPF_TG,    /* AVRCP target categories */
     672,                   /* AVDTP signaling channel MTU at L2CAP */
     MAX_3MBPS_AVDTP_MTU,   /* AVDTP audio transport channel MTU at L2CAP */
