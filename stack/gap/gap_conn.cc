@@ -1000,10 +1000,8 @@ static void gap_data_ind(uint16_t l2cap_cid, BT_HDR* p_msg) {
     fixed_queue_enqueue(p_ccb->rx_queue, p_msg);
 
     p_ccb->rx_queue_size += p_msg->len;
-    /*
     LOG(ERROR) << StringPrintf ("gap_data_ind - rx_queue_size=%d, msg len=%d",
                                    p_ccb->rx_queue_size, p_msg->len);
-     */
 
     p_ccb->p_callback(p_ccb->gap_handle, GAP_EVT_CONN_DATA_AVAIL, nullptr);
   } else {

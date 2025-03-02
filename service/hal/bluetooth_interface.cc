@@ -206,7 +206,8 @@ bt_callbacks_t bt_callbacks = {
     ThreadEventCallback,
     nullptr, /* dut_mode_recv_cb */
     nullptr, /* le_test_mode_cb */
-    nullptr  /* energy_info_cb */
+    nullptr,  /* energy_info_cb */
+    nullptr
 };
 
 bt_os_callouts_t bt_os_callouts = {sizeof(bt_os_callouts_t),

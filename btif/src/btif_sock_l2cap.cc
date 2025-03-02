@@ -39,6 +39,7 @@
 #include "bta_jv_api.h"
 #include "bta_jv_co.h"
 #include "btif_common.h"
+#include "btif_sock.h"
 #include "btif_sock_sdp.h"
 #include "btif_sock_thread.h"
 #include "btif_sock_util.h"
@@ -55,6 +56,8 @@
 #include "port_api.h"
 #include "sdp_api.h"
 
+using bluetooth::Uuid;
+
 struct packet {
   struct packet *next, *prev;
   uint32_t len;
@@ -65,6 +68,7 @@ typedef struct l2cap_socket {
   struct l2cap_socket* prev;  // link to prev list item
   struct l2cap_socket* next;  // link to next list item
   RawAddress addr;            // other side's address
+  Uuid service_uuid;   // service uuid (if any)
   char name[256];             // user-friendly name of the service
   uint32_t id;                // just a tag to find this struct
   int app_uid;                // The UID of the app who requested this socket
@@ -288,6 +292,7 @@ static void btsock_l2cap_free_l(l2cap_socket* sock) {
 }
 
 static l2cap_socket* btsock_l2cap_alloc_l(const char* name,
+                                          const bluetooth::Uuid& uuid,
                                           const RawAddress* addr,
                                           char is_server, int flags) {
   unsigned security = 0;
@@ -316,6 +321,8 @@ static l2cap_socket* btsock_l2cap_alloc_l(const char* name,
   sock->handle = 0;
   sock->server_psm_sent = false;
   sock->app_uid = -1;
+  sock->service_uuid = uuid;
+
 
   if (name) strncpy(sock->name, name, sizeof(sock->name) - 1);
   if (addr) sock->addr = *addr;
@@ -461,7 +468,7 @@ static void on_srv_l2cap_psm_connect_l(tBTA_JV_L2CAP_OPEN* p_open,
                                        l2cap_socket* sock) {
   // std::mutex locked by caller
   l2cap_socket* accept_rs =
-      btsock_l2cap_alloc_l(sock->name, &p_open->rem_bda, false, 0);
+      btsock_l2cap_alloc_l(sock->name,  Uuid::kEmpty, &p_open->rem_bda, false, 0);
   accept_rs->connected = true;
   accept_rs->security = sock->security;
   accept_rs->fixed_chan = sock->fixed_chan;
@@ -508,7 +515,7 @@ static void on_srv_l2cap_le_connect_l(tBTA_JV_L2CAP_LE_OPEN* p_open,
                                       l2cap_socket* sock) {
   // std::mutex locked by caller
   l2cap_socket* accept_rs =
-      btsock_l2cap_alloc_l(sock->name, &p_open->rem_bda, false, 0);
+      btsock_l2cap_alloc_l(sock->name, Uuid::kEmpty, &p_open->rem_bda, false, 0);
   if (!accept_rs) return;
 
   // swap IDs
@@ -658,6 +665,28 @@ static void on_l2cap_close(tBTA_JV_L2CAP_CLOSE* p_close, uint32_t id) {
   LOG(ERROR) << __func__ << ": slot id: " << sock->id << ", fd: " << sock->our_fd
            << (sock->fixed_chan ? ", fixed_chan:" : ", PSM: ") << sock->channel
            << ", server:" << sock->server;
+
+  LOG(ERROR) <<__func__ << " on_l2cap_close";
+  if (!sock->service_uuid.IsEmpty()) {
+    BTIF_OBEX_CONNECTION_EVT connection_cb;
+    connection_cb.uuid = sock->service_uuid,
+    connection_cb.bd_addr = sock->addr,
+    connection_cb.state = bt_obex_connection_state_t::STATE_DISCONNECTED;
+
+    btif_transfer_context(btif_obex_upstreams_evt, BTIF_SOCK_CONNECTION_EVT,
+                        (char*)&connection_cb, sizeof(BTIF_OBEX_CONNECTION_EVT),
+                        NULL);
+    /*do_in_jni_thread(FROM_HERE, base::Bind(
+        bt_hal_cbacks->socket_connect_changed_cb, bda, uuid,
+        std::forward<const bt_obex_connection_state_t &>(bt_obex_connection_state_t::STATE_DISCONNECTED)
+    ));*/
+  }
+  /*if (!sock->service_uuid.IsEmpty())
+  {
+      do_in_jni_thread(FROM_HERE, base::Bind(bt_hal_cbacks->socket_connect_changed_cb, sock->addr,
+                                      sock->service_uuid, bt_obex_connection_state_t::STATE_DISCONNECTED));
+  }*/
+
   // TODO: This does not seem to be called...
   // I'm not sure if this will be called for non-server sockets?
   if (!sock->fixed_chan && (sock->server)) {
@@ -880,6 +909,7 @@ static void btsock_l2cap_server_listen(l2cap_socket* sock) {
 }
 
 static bt_status_t btsock_l2cap_listen_or_connect(const char* name,
+                                                  const bluetooth::Uuid* uuid,
                                                   const RawAddress* addr,
                                                   int channel, int* sock_fd,
                                                   int flags, char listen,
@@ -901,11 +931,18 @@ static bt_status_t btsock_l2cap_listen_or_connect(const char* name,
   }
 
   if (!is_inited()) return BT_STATUS_NOT_READY;
-
+  if (uuid == NULL || uuid->IsEmpty()) {
+      APPL_TRACE_DEBUG(
+          "%s: service_uuid not set AND BTSOCK_FLAG_NO_SDP is not set - "
+          "changing to SPP",
+          __func__);
+      // Use serial port profile to listen to specified channel
+      uuid = &Uuid::kEmpty;
+    }
   // TODO: This is kind of bad to lock here, but it is needed for the current
   // design.
   std::unique_lock<std::mutex> lock(state_lock);
-  l2cap_socket* sock = btsock_l2cap_alloc_l(name, addr, listen, flags);
+  l2cap_socket* sock = btsock_l2cap_alloc_l(name, *uuid, addr, listen, flags);
   if (!sock) {
     return BT_STATUS_NOMEM;
   }
@@ -954,15 +991,15 @@ static bt_status_t btsock_l2cap_listen_or_connect(const char* name,
   return BT_STATUS_SUCCESS;
 }
 
-bt_status_t btsock_l2cap_listen(const char* name, int channel, int* sock_fd,
-                                int flags, int app_uid) {
-  return btsock_l2cap_listen_or_connect(name, NULL, channel, sock_fd, flags, 1,
+bt_status_t btsock_l2cap_listen(const char* name, const bluetooth::Uuid* uuid,
+                      int channel, int* sock_fd, int flags, int app_uid) {
+  return btsock_l2cap_listen_or_connect(name, uuid, NULL, channel, sock_fd, flags, 1,
                                         app_uid);
 }
 
 bt_status_t btsock_l2cap_connect(const RawAddress* bd_addr, int channel,
                                  int* sock_fd, int flags, int app_uid) {
-  return btsock_l2cap_listen_or_connect(NULL, bd_addr, channel, sock_fd, flags,
+  return btsock_l2cap_listen_or_connect(NULL,  NULL, bd_addr, channel, sock_fd, flags,
                                         0, app_uid);
 }
 

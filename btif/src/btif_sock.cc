@@ -29,6 +29,7 @@
 #include "bta_api.h"
 #include "btif_common.h"
 #include "btif_config.h"
+#include "btif_sock.h"
 #include "btif_sock_l2cap.h"
 #include "btif_sock_rfc.h"
 #include "btif_sock_sco.h"
@@ -118,6 +119,30 @@ error:;
   return BT_STATUS_FAIL;
 }
 
+void btif_obex_upstreams_evt(uint16_t event, char* p_param) {
+  if (p_param == NULL) {
+    return;
+  }
+
+   BTIF_OBEX_CONNECTION_EVT* p_data = (BTIF_OBEX_CONNECTION_EVT*)p_param;
+   Uuid uuid;
+   RawAddress bda;
+   bt_obex_connection_state_t state ;
+   switch (event) {
+    case BTIF_SOCK_CONNECTION_EVT:
+      uuid = p_data->uuid;
+      bda = p_data->bd_addr;
+      state = p_data->state;
+      //do_in_jni_thread(FROM_HERE, base::Bind(bt_hal_cbacks->socket_connect_changed_cb,
+      //                      bda, uuid, state));
+        HAL_CBACK(bt_hal_cbacks, socket_connect_changed_cb, &bda, uuid, state);
+      break;
+    default:
+      LOG_ERROR(LOG_TAG, "%s unknown event %d", __func__, event);
+      break;
+  }
+}
+
 void btif_sock_cleanup(void) {
   int saved_handle = thread_handle;
   if (std::atomic_exchange(&thread_handle, -1) == -1) return;
@@ -152,8 +177,8 @@ static bt_status_t btsock_listen(btsock_type_t type, const char* service_name,
                                  flags, app_uid);
       break;
     case BTSOCK_L2CAP:
-      status =
-          btsock_l2cap_listen(service_name, channel, sock_fd, flags, app_uid);
+      status = btsock_l2cap_listen(service_name, service_uuid, channel, sock_fd, 
+                                 flags, app_uid);
       break;
     case BTSOCK_L2CAP_LE:
       if (flags & BTSOCK_FLAG_NO_SDP) {
@@ -170,7 +195,7 @@ static bt_status_t btsock_listen(btsock_type_t type, const char* service_name,
           "%s: type=BTSOCK_L2CAP_LE, channel=0x%x, original=0x%x, flags=0x%x",
           __func__, channel, original_channel, flags);
       status =
-          btsock_l2cap_listen(service_name, channel, sock_fd, flags, app_uid);
+          btsock_l2cap_listen(service_name, service_uuid, channel, sock_fd, flags, app_uid);
       break;
     case BTSOCK_SCO:
       status = btsock_sco_listen(sock_fd, flags);

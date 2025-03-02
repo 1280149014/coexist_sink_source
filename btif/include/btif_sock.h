@@ -22,7 +22,20 @@
 
 #include <hardware/bt_sock.h>
 
+#define BTIF_SOCK_CONNECTION_EVT 0    /* CONNECTION Event */
+
 const btsock_interface_t* btif_sock_get_interface(void);
 
 bt_status_t btif_sock_init(uid_set_t* uid_set);
+
+/*******************************************************************************
+ *
+ * Function         btif_dm_upstreams_cback
+ *
+ * Description      Executes UPSTREAMS events in btif context
+ *
+ * Returns          void
+ *
+ ******************************************************************************/
+void btif_obex_upstreams_evt(uint16_t event, char* p_param);
 void btif_sock_cleanup(void);

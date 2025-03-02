@@ -306,6 +306,19 @@ typedef enum {
   BT_SSP_VARIANT_PASSKEY_NOTIFICATION
 } bt_ssp_variant_t;
 
+typedef enum {
+  STATE_DISCONNECTED = 0,
+  STATE_CONNECTING,
+  STATE_DISCONNECTING,
+  STATE_CONNECTED
+} bt_obex_connection_state_t;
+
+typedef struct {
+  RawAddress bd_addr;          /* BD address peer device. */
+  bluetooth::Uuid uuid;
+  bt_obex_connection_state_t state;
+} BTIF_OBEX_CONNECTION_EVT;
+
 #define BT_MAX_NUM_UUIDS 32
 
 /** Bluetooth Interface callbacks */
@@ -400,6 +413,12 @@ typedef void (*le_test_mode_callback)(bt_status_t status, uint16_t num_packets);
 typedef void (*energy_info_callback)(bt_activity_energy_info* energy_info,
                                      bt_uid_traffic_t* uid_data);
 
+/** Bluetooth obex connect state change Callback. */
+typedef void (*socket_connect_changed_callback)(
+                                      const RawAddress* bd_addr, 
+                                      const bluetooth::Uuid& uuid,
+                                      bt_obex_connection_state_t state);
+
 /** TODO: Add callbacks for Link Up/Down and other generic
  *  notifications/callbacks */
 
@@ -420,6 +439,7 @@ typedef struct {
   dut_mode_recv_callback dut_mode_recv_cb;
   le_test_mode_callback le_test_mode_cb;
   energy_info_callback energy_info_cb;
+  socket_connect_changed_callback socket_connect_changed_cb;
 } bt_callbacks_t;
 
 typedef void (*alarm_cb)(void* data);

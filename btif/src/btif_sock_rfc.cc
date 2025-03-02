@@ -40,6 +40,7 @@
 #include "bta_jv_api.h"
 #include "bta_jv_co.h"
 #include "btif_common.h"
+#include "btif_sock.h"
 #include "btif_sock_sdp.h"
 #include "btif_sock_thread.h"
 #include "btif_sock_util.h"
@@ -585,6 +586,25 @@ static void on_rfc_close(UNUSED_ATTR tBTA_JV_RFCOMM_CLOSE* p_close,
         slot->app_uid, slot->scn,
         slot->f.server ? android::bluetooth::SOCKET_ROLE_LISTEN
                        : android::bluetooth::SOCKET_ROLE_CONNECTION);
+    if (!slot->service_uuid.IsEmpty()) {
+      BTIF_OBEX_CONNECTION_EVT connection_cb;
+      connection_cb.uuid = slot->service_uuid,
+      connection_cb.bd_addr = slot->addr,
+      connection_cb.state = bt_obex_connection_state_t::STATE_DISCONNECTED;
+      btif_transfer_context(btif_obex_upstreams_evt, BTIF_SOCK_CONNECTION_EVT,
+                          (char*)&connection_cb, sizeof(BTIF_OBEX_CONNECTION_EVT),
+                          NULL);
+      /*RawAddress address = slot->addr;
+      bluetooth::Uuid service_uuid = slot->service_uuid;
+      do_in_jni_thread(FROM_HERE, base::Bind(
+        bt_hal_cbacks->socket_connect_changed_cb,
+        address,
+        service_uuid,
+        bt_obex_connection_state_t::STATE_DISCONNECTED
+      ));
+      //do_in_jni_thread(FROM_HERE, base::Bind(bt_hal_cbacks->socket_connect_changed_cb, slot->addr,
+      //                slot->service_uuid, bt_obex_connection_state_t::STATE_DISCONNECTED));*/
+    } 
     cleanup_rfc_slot(slot);
   }
 }
