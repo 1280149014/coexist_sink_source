@@ -28,6 +28,10 @@
 #define BTIF_SDP_H
 
 #include <hardware/bt_sdp.h>
+#include <unordered_map>
+#include "bta_sdp_api.h"
+
+std::unordered_map<RawAddress, std::unordered_map<bluetooth::Uuid, tBTA_SDP_SEARCH_COMP>> sdp_search_map;
 
 btsdp_interface_t* btif_sdp_get_interface();
 

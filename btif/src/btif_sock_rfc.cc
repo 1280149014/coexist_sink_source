@@ -354,6 +354,12 @@ bt_status_t btsock_rfc_connect(const RawAddress* bd_addr,
 
   std::unique_lock<std::recursive_mutex> lock(slot_lock);
 
+  if (service_uuid && service_uuid->IsEmpty())
+  {
+    
+    /* code */
+  }
+
   rfc_slot_t* slot =
       alloc_rfc_slot(bd_addr, NULL, *service_uuid, channel, flags, false);
   if (!slot) {
@@ -586,7 +592,11 @@ static void on_rfc_close(UNUSED_ATTR tBTA_JV_RFCOMM_CLOSE* p_close,
         slot->app_uid, slot->scn,
         slot->f.server ? android::bluetooth::SOCKET_ROLE_LISTEN
                        : android::bluetooth::SOCKET_ROLE_CONNECTION);
+    LOG_DEBUG(LOG_TAG, "%s ylq  RFCOMM socket closed with slot %u. uuid = %s", __func__,
+              slot->id, slot->service_uuid.ToString().c_str());
     if (!slot->service_uuid.IsEmpty()) {
+      LOG_DEBUG(LOG_TAG, "RFCOMM socket closed with bd_addr %s. uuid = %s",
+                slot->addr.ToString().c_str(), slot->service_uuid.ToString().c_str());
       BTIF_OBEX_CONNECTION_EVT connection_cb;
       connection_cb.uuid = slot->service_uuid,
       connection_cb.bd_addr = slot->addr,

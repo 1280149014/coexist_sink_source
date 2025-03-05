@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <unordered_map>
 #include <hardware/bluetooth.h>
 #include <hardware/bt_sdp.h>
 
@@ -39,6 +40,7 @@
 #include "btif_common.h"
 #include "btif_profile_queue.h"
 #include "btif_util.h"
+//#include "btif_sdp.h"
 
 using bluetooth::Uuid;
 
@@ -64,12 +66,14 @@ void copy_sdp_records(bluetooth_sdp_record* in_records,
 
 static btsdp_callbacks_t* bt_sdp_callbacks = NULL;
 
+extern std::unordered_map<RawAddress, std::unordered_map<bluetooth::Uuid, tBTA_SDP_SEARCH_COMP>> sdp_search_map;
+
 static void btif_sdp_search_comp_evt(uint16_t event, char* p_param) {
   tBTA_SDP_SEARCH_COMP* evt_data = (tBTA_SDP_SEARCH_COMP*)p_param;
   BTIF_TRACE_DEBUG("%s:  event = %d", __func__, event);
 
   if (event != BTA_SDP_SEARCH_COMP_EVT) return;
-
+  sdp_search_map[evt_data->remote_addr][evt_data->uuid] = *evt_data;
   HAL_CBACK(bt_sdp_callbacks, sdp_search_cb, (bt_status_t)evt_data->status,
             evt_data->remote_addr, evt_data->uuid, evt_data->record_count,
             evt_data->records);

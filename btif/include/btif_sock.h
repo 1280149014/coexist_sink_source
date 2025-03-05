@@ -21,10 +21,13 @@
 #include "btif_uid.h"
 
 #include <hardware/bt_sock.h>
+#include "bta_sdp_api.h"
 
 #define BTIF_SOCK_CONNECTION_EVT 0    /* CONNECTION Event */
 
 const btsock_interface_t* btif_sock_get_interface(void);
+
+extern std::unordered_map<RawAddress, std::unordered_map<bluetooth::Uuid, tBTA_SDP_SEARCH_COMP>> sdp_search_map;
 
 bt_status_t btif_sock_init(uid_set_t* uid_set);
 

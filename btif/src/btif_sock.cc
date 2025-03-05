@@ -29,6 +29,9 @@
 #include "bta_api.h"
 #include "btif_common.h"
 #include "btif_config.h"
+//#include "btif_sdp.h"
+#include "bta_sdp_api.h"
+#include <hardware/bt_sdp.h>
 #include "btif_sock.h"
 #include "btif_sock_l2cap.h"
 #include "btif_sock_rfc.h"
@@ -120,6 +123,7 @@ error:;
 }
 
 void btif_obex_upstreams_evt(uint16_t event, char* p_param) {
+  LOG_ERROR(LOG_TAG, "%s event %d ", __func__, event);
   if (p_param == NULL) {
     return;
   }
@@ -133,6 +137,7 @@ void btif_obex_upstreams_evt(uint16_t event, char* p_param) {
       uuid = p_data->uuid;
       bda = p_data->bd_addr;
       state = p_data->state;
+      LOG_ERROR(LOG_TAG, "%s event %d , uuid", __func__, event);
       //do_in_jni_thread(FROM_HERE, base::Bind(bt_hal_cbacks->socket_connect_changed_cb,
       //                      bda, uuid, state));
         HAL_CBACK(bt_hal_cbacks, socket_connect_changed_cb, &bda, uuid, state);
@@ -226,7 +231,37 @@ static bt_status_t btsock_connect(const RawAddress* bd_addr, btsock_type_t type,
                 __func__, type, channel, flags);
   *sock_fd = INVALID_FD;
   bt_status_t status = BT_STATUS_FAIL;
-
+  if (uuid == NULL || uuid->IsEmpty())
+  {
+    std::unordered_map<bluetooth::Uuid, tBTA_SDP_SEARCH_COMP>  map=  sdp_search_map[* bd_addr];
+    if (!map.empty())
+    {
+      auto iter = map.begin();
+      while (iter != map.end())
+      {
+        bluetooth::Uuid uuid1 = iter->first;
+        tBTA_SDP_SEARCH_COMP sdp_records = iter->second;
+        if (!uuid1.IsEmpty())
+        {
+          if (uuid1 == UUID_PBAP_PSE) {
+            APPL_TRACE_DEBUG("%s() - found PBAP (PSE) uuid", __func__);
+            for (int i = 0; i < sdp_records.record_count; i++)
+            {
+              bluetooth_sdp_record record = sdp_records.records[i];
+              if (record.pse.hdr.type == SDP_TYPE_PBAP_PSE && 
+                      (record.pse.hdr.rfcomm_channel_number == channel || 
+                        record.pse.hdr.l2cap_psm == channel) && channel != 0)
+              {
+                uuid = &uuid1;
+                break;
+              }
+            }
+          }
+        }
+        ++iter;
+      }
+    }
+  }
   bluetooth::common::LogSocketConnectionState(
       *bd_addr, 0, type,
       android::bluetooth::SocketConnectionstateEnum::
@@ -239,7 +274,7 @@ static bt_status_t btsock_connect(const RawAddress* bd_addr, btsock_type_t type,
       break;
 
     case BTSOCK_L2CAP:
-      status = btsock_l2cap_connect(bd_addr, channel, sock_fd, flags, app_uid);
+      status = btsock_l2cap_connect(bd_addr, uuid, channel, sock_fd, flags, app_uid);
       break;
 
     case BTSOCK_L2CAP_LE: {
@@ -257,7 +292,7 @@ static bt_status_t btsock_connect(const RawAddress* bd_addr, btsock_type_t type,
 
       LOG_DEBUG(LOG_TAG, "%s: type=BTSOCK_L2CAP_LE, channel=0x%x, flags=0x%x",
                 __func__, channel, flags);
-      status = btsock_l2cap_connect(bd_addr, channel, sock_fd, flags, app_uid);
+      status = btsock_l2cap_connect(bd_addr, uuid, channel, sock_fd, flags, app_uid);
       break;
     }
 

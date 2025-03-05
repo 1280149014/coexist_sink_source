@@ -997,9 +997,9 @@ bt_status_t btsock_l2cap_listen(const char* name, const bluetooth::Uuid* uuid,
                                         app_uid);
 }
 
-bt_status_t btsock_l2cap_connect(const RawAddress* bd_addr, int channel,
-                                 int* sock_fd, int flags, int app_uid) {
-  return btsock_l2cap_listen_or_connect(NULL,  NULL, bd_addr, channel, sock_fd, flags,
+bt_status_t btsock_l2cap_connect(const RawAddress* bd_addr, const bluetooth::Uuid* uuid,
+                                  int channel, int* sock_fd, int flags, int app_uid) {
+  return btsock_l2cap_listen_or_connect(NULL,  uuid, bd_addr, channel, sock_fd, flags,
                                         0, app_uid);
 }
 
