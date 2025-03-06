@@ -38,6 +38,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
+#include <dirent.h>
 
 #include "bt_types.h"
 #include "common/time_util.h"
@@ -164,6 +165,7 @@ static bool is_btsnoop_filtered;
 void btsnoop_net_open();
 void btsnoop_net_close();
 void btsnoop_net_write(const void* data, size_t length);
+std::string get_btsnoop_log_folder();
 
 static void delete_btsnoop_files(bool filtered);
 static std::string get_btsnoop_log_path(bool filtered);
@@ -171,6 +173,9 @@ static std::string get_btsnoop_last_log_path(std::string log_path);
 static void open_next_snoop_file();
 static void btsnoop_write_packet(packet_type_t type, uint8_t* packet,
                                  bool is_received, uint64_t timestamp_us);
+
+static std::string get_btsnoop_log_path_with_timestamp(bool filtered);
+static void delete_oldest_btsnoop_file();
 
 // Module lifecycle functions
 
@@ -181,10 +186,10 @@ static future_t* start_up() {
   // Default mode is FILTERED on userdebug/eng build, DISABLED on user build.
   // It can also be overwritten by modifying the global setting.
   int is_debuggable = osi_property_get_int32(IS_DEBUGGABLE_PROPERTY, 0);
-  std::string default_mode = BTSNOOP_MODE_DISABLED;
+  std::string default_mode = BTSNOOP_MODE_FULL;
   if (is_debuggable) {
     int len = osi_property_get(BTSNOOP_DEFAULT_MODE_PROPERTY, property.data(),
-                               BTSNOOP_MODE_DISABLED);
+                               BTSNOOP_MODE_FULL);
     default_mode = std::string(property.data(), len);
   }
 
@@ -363,13 +368,18 @@ static void open_next_snoop_file() {
     logfile_fd = INVALID_FD;
   }
 
+#ifdef HCIDUMP_WITH_TIMESTAMP
+  delete_oldest_btsnoop_file();
+
+  auto log_path = get_btsnoop_log_path_with_timestamp(is_btsnoop_filtered);
+#else
   auto log_path = get_btsnoop_log_path(is_btsnoop_filtered);
   auto last_log_path = get_btsnoop_last_log_path(log_path);
 
   if (rename(log_path.c_str(), last_log_path.c_str()) != 0 && errno != ENOENT)
     LOG(ERROR) << __func__ << ": unable to rename '" << log_path << "' to '"
                << last_log_path << "' : " << strerror(errno);
-
+  #endif
   mode_t prevmask = umask(0);
   logfile_fd = open(log_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
                     S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
@@ -479,5 +489,119 @@ static void btsnoop_write_packet(packet_type_t type, uint8_t* packet,
     iovec iov[] = {{&header, sizeof(btsnoop_header_t)},
                    {reinterpret_cast<void*>(packet), length_he - 1}};
     TEMP_FAILURE_RETRY(writev(logfile_fd, iov, 2));
+  }
+}
+
+#define MAX_BTSNOOP_FILE_COUNT   10
+
+std::string get_timestamp(time_t timestamp)
+{
+  char timebuf[20];
+  struct tm tm;
+  localtime_r(&timestamp, &tm);
+
+  strftime(timebuf, sizeof(timebuf), "%Y%m%d%H%M%S", &tm);
+  std::string result(timebuf);
+
+  return result;
+}
+
+std::string get_btsnoop_log_path_with_timestamp(bool filtered) {
+  char btsnoop_path[PROPERTY_VALUE_MAX];
+  std::string btsnoop_folder = get_btsnoop_log_folder();
+  std::string timestamp = get_timestamp(time(nullptr));
+
+  snprintf(btsnoop_path, PROPERTY_VALUE_MAX, "%s%s_%s.log", btsnoop_folder.c_str(), \
+           "btsnoop_hci", timestamp.c_str());
+  std::string result(btsnoop_path);
+
+  if (filtered) result = result.append(".filtered");
+
+  LOG(INFO) << __func__ << ": file name " << result.c_str();
+  return result;
+}
+
+std::string find_oldest_btsnoop_file(const char *root) {
+  DIR *dir;
+  std::string current_btsnoop_file;
+  std::string oldest_btsnoop_file;
+  struct dirent *pEntry;
+  struct stat st;
+  uint32_t count = 0;
+  time_t ctime = 0;
+
+  if (root == nullptr)
+  {
+    LOG(ERROR) << __func__ << ": root is null point";
+    goto err_handle;
+  }
+
+  dir = opendir(root);
+  if (dir == nullptr)
+  {
+    LOG(ERROR) << __func__ << ": unable to open " << root << " : " << strerror(errno);
+    goto err_handle;
+  }
+
+  while((pEntry = readdir(dir)) != nullptr)
+  {
+    if(strcmp(pEntry->d_name, ".") == 0 || strcmp(pEntry->d_name, "..") == 0)
+    {
+      continue;
+    }
+
+    current_btsnoop_file.clear();
+    current_btsnoop_file.append(root);
+    current_btsnoop_file.append(pEntry->d_name);
+
+    if(pEntry->d_type == DT_REG)
+    {
+      count++;
+      stat(current_btsnoop_file.c_str(), &st);
+      LOG(INFO) << __func__ << ": found " << current_btsnoop_file.c_str() \
+                << " create time at: " << get_timestamp(st.st_ctime).c_str();
+      if (ctime == 0)
+      {
+        ctime = st.st_ctime;
+        oldest_btsnoop_file = current_btsnoop_file;
+      }
+      else if (st.st_ctime < ctime)
+      {
+        ctime = st.st_ctime;
+        oldest_btsnoop_file = current_btsnoop_file;
+      }
+    }
+  }
+
+  closedir(dir);
+  if (count >= MAX_BTSNOOP_FILE_COUNT)
+  {
+    return oldest_btsnoop_file;
+  }
+
+err_handle:
+
+  return std::string("");
+}
+
+std::string get_btsnoop_log_folder() {
+  char btsnoop_file[PROPERTY_VALUE_MAX];
+  char btsnoop_folder[PROPERTY_VALUE_MAX];
+
+  osi_property_get(BTSNOOP_PATH_PROPERTY, btsnoop_file, DEFAULT_BTSNOOP_PATH);
+  strncpy(btsnoop_folder, btsnoop_file, (strlen(btsnoop_file) - 15));
+  std::string result(btsnoop_folder);
+
+  return result;
+}
+
+void delete_oldest_btsnoop_file() {
+  std::string btsnoop_folder = get_btsnoop_log_folder();
+  std::string oldest_btsnoop_file = find_oldest_btsnoop_file(btsnoop_folder.c_str());
+
+  if (!oldest_btsnoop_file.empty())
+  {
+    LOG(INFO) << __func__ << ": delete " << oldest_btsnoop_file.c_str();
+    remove(oldest_btsnoop_file.c_str());
   }
 }

@@ -38,6 +38,9 @@ cc_library_static {
         "system/bt/btif/include",
         "system/libhwbinder/include",
     ],
+    cflags: [
+        "-DHCIDUMP_WITH_TIMESTAMP",
+    ],
 }
 
 // HCI unit tests for target
