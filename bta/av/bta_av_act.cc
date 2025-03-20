@@ -551,10 +551,12 @@ void bta_av_rc_opened(tBTA_AV_CB* p_cb, tBTA_AV_DATA* p_data) {
   APPL_TRACE_DEBUG("%s: local features %d peer features %d", __func__,
                    p_cb->features, p_cb->rcb[i].peer_features);
 
+#if (AVRCP_BROWSE_INCLUDED == TRUE)
   /* listen to browsing channel when the connection is open,
    * if peer initiated AVRCP connection and local device supports browsing
    * channel */
   AVRC_OpenBrowse(p_data->rc_conn_chg.handle, AVCT_ACP);
+#endif
 
   if (p_cb->rcb[i].lidx == (BTA_AV_NUM_LINKS + 1) && shdl != 0) {
     /* rc is opened on the RC only ACP channel, but is for a specific
@@ -625,6 +627,7 @@ void bta_av_rc_opened(tBTA_AV_CB* p_cb, tBTA_AV_DATA* p_data) {
       bta_av_rc_disc(disc);
     }
     (*p_cb->p_cback)(BTA_AV_RC_OPEN_EVT, (tBTA_AV*)&rc_open);
+       #if (AVRCP_BROWSE_INCLUDED == TRUE)
     /* if local initiated AVRCP connection and both peer and locals device
      * support
      * browsing channel, open the browsing channel now
@@ -637,6 +640,7 @@ void bta_av_rc_opened(tBTA_AV_CB* p_cb, tBTA_AV_DATA* p_data) {
         AVRC_OpenBrowse(p_data->rc_conn_chg.handle, AVCT_INT);
       }
     }
+    #endif
     return;
   }
   rc_open.status = BTA_AV_SUCCESS;
