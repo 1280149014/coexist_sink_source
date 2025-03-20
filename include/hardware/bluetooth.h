@@ -415,8 +415,8 @@ typedef void (*energy_info_callback)(bt_activity_energy_info* energy_info,
 
 /** Bluetooth obex connect state change Callback. */
 typedef void (*socket_connect_changed_callback)(
-                                      const RawAddress* bd_addr, 
-                                      const bluetooth::Uuid& uuid,
+                                      RawAddress* bd_addr, 
+                                      bluetooth::Uuid& uuid,
                                       bt_obex_connection_state_t state);
 
 /** TODO: Add callbacks for Link Up/Down and other generic
