@@ -3646,14 +3646,18 @@ bt_status_t btif_av_source_execute_service(bool enable) {
     // Support for browsing for SDP record should work only if we enable BROWSE
     // while registering.
     tBTA_AV_FEAT features = BTA_AV_FEAT_RCTG | BTA_AV_FEAT_METADATA |
-                            BTA_AV_FEAT_VENDOR | BTA_AV_FEAT_NO_SCO_SSPD;
+                            BTA_AV_FEAT_VENDOR | BTA_AV_FEAT_NO_SCO_SSPD | BTA_AV_FEAT_COVER_ARTWORK;
 
     if (delay_reporting_enabled()) {
       features |= BTA_AV_FEAT_DELAY_RPT;
     }
 
 #if (AVRC_ADV_CTRL_INCLUDED == TRUE)
+  #if (AVRCP_BROWSE_INCLUDED == TRUE)
     features |= BTA_AV_FEAT_RCCT | BTA_AV_FEAT_ADV_CTRL | BTA_AV_FEAT_BROWSE;
+  #else
+    features |= BTA_AV_FEAT_RCCT | BTA_AV_FEAT_ADV_CTRL| BTA_AV_FEAT_BROWSE; // test
+  #endif
 #endif
     //BTA_AvEnable(BTA_SEC_AUTHENTICATE, features, bta_av_source_callback);
     if (btif_av_src_sink_coexist_enabled()) {
@@ -3682,8 +3686,8 @@ bt_status_t btif_av_sink_execute_service(bool enable) {
     // be initiated by the app/audioflinger layers.
     tBTA_AV_FEAT features = BTA_AV_FEAT_NO_SCO_SSPD | BTA_AV_FEAT_RCCT |
                             BTA_AV_FEAT_METADATA | BTA_AV_FEAT_VENDOR |
-                            BTA_AV_FEAT_ADV_CTRL | BTA_AV_FEAT_RCTG |
-                            BTA_AV_FEAT_BROWSE | BTA_AV_FEAT_COVER_ARTWORK;
+                            BTA_AV_FEAT_ADV_CTRL | BTA_AV_FEAT_RCTG | BTA_AV_FEAT_COVER_ARTWORK;
+                            //BTA_AV_FEAT_BROWSE | BTA_AV_FEAT_COVER_ARTWORK;
     if (btif_av_src_sink_coexist_enabled())
       BTA_AvEnable(BTA_SEC_AUTHENTICATE, features, bta_av_event_callback);
     else

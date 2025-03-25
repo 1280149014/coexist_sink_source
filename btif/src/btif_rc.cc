@@ -374,13 +374,13 @@ static const uint8_t media_attr_list_size =
 
 // List of desired media attribute keys to request if cover artwork is not a
 // supported feature
-static const uint32_t media_attr_list_no_cover_art[] = {
+/*static const uint32_t media_attr_list_no_cover_art[] = {
       AVRC_MEDIA_ATTR_ID_TITLE,       AVRC_MEDIA_ATTR_ID_ARTIST,
       AVRC_MEDIA_ATTR_ID_ALBUM,       AVRC_MEDIA_ATTR_ID_TRACK_NUM,
       AVRC_MEDIA_ATTR_ID_NUM_TRACKS,  AVRC_MEDIA_ATTR_ID_GENRE,
       AVRC_MEDIA_ATTR_ID_PLAYING_TIME};
 static const uint8_t media_attr_list_no_cover_art_size =
-    sizeof(media_attr_list_no_cover_art)/sizeof(uint32_t);
+    sizeof(media_attr_list_no_cover_art)/sizeof(uint32_t); */
 
 /*****************************************************************************
  *  Static functions
@@ -480,15 +480,17 @@ btif_rc_device_cb_t* btif_rc_get_device_by_handle(uint8_t handle) {
 }
 
 const uint32_t* get_requested_attributes_list(btif_rc_device_cb_t* p_dev) {
-  return (p_dev->rc_features & BTA_AV_FEAT_COVER_ARTWORK
-      ? media_attr_list
-      : media_attr_list_no_cover_art);
+  //return (p_dev->rc_features & BTA_AV_FEAT_COVER_ARTWORK
+  //  ? media_attr_list
+  //  : media_attr_list_no_cover_art);
+  return media_attr_list;
 }
 
 uint8_t get_requested_attributes_list_size(btif_rc_device_cb_t* p_dev) {
-  return (p_dev->rc_features & BTA_AV_FEAT_COVER_ARTWORK
-      ? media_attr_list_size
-      : media_attr_list_no_cover_art_size);
+    //return (p_dev->rc_features & BTA_AV_FEAT_COVER_ARTWORK
+    //  ? media_attr_list_size
+    //  : media_attr_list_no_cover_art_size);
+  return  media_attr_list_size;
 }
 
 void fill_pdu_queue(int index, uint8_t ctype, uint8_t label, bool pending,
@@ -562,9 +564,9 @@ void handle_rc_ctrl_features_all(btif_rc_device_cb_t* p_dev) {
     rc_features |= BTRC_FEAT_BROWSE;
   }
   /* Add cover art feature capability */
-  if (p_dev->peer_tg_features & BTA_AV_FEAT_COVER_ARTWORK) {
+  //if (p_dev->peer_tg_features & BTA_AV_FEAT_COVER_ARTWORK) {
     rc_features |= BTRC_FEAT_COVER_ARTWORK;
-  }
+  //}
   if (bt_rc_ctrl_callbacks != NULL) {
     BTIF_TRACE_DEBUG("%s: Update rc features to CTRL: %d", __func__,
                      rc_features);
@@ -614,9 +616,9 @@ void handle_rc_ctrl_features(btif_rc_device_cb_t* p_dev) {
   }
 
   /* Add cover art feature capability */
-  if (p_dev->rc_features & BTA_AV_FEAT_COVER_ARTWORK) {
+  //if (p_dev->rc_features & BTA_AV_FEAT_COVER_ARTWORK) {
     rc_features |= BTRC_FEAT_COVER_ARTWORK;
-  }
+  //}
 
   BTIF_TRACE_DEBUG("%s: Update rc features to CTRL: %d", __func__, rc_features);
   do_in_jni_thread(FROM_HERE, base::Bind(bt_rc_ctrl_callbacks->getrcfeatures_cb,
