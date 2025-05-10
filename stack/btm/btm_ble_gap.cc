@@ -105,6 +105,24 @@ class AdvertisingCache {
     return items.front().data;
   }
 
+  uint16_t SetAdvEvtType(uint8_t addr_type, const RawAddress& addr, uint16_t adv_evt_type) {
+    auto it = Find(addr_type, addr);
+    if (it != items.end()) {
+      it->adv_evt_type = adv_evt_type;
+      return adv_evt_type;
+    }
+    return adv_evt_type;
+  }
+
+  uint16_t UpdateAdvEvtType(uint8_t addr_type, const RawAddress& addr, uint16_t adv_evt_type) {
+    auto it = Find(addr_type, addr);
+    if (it != items.end()) {
+      it->adv_evt_type |= adv_evt_type;
+      return it->adv_evt_type;
+    }
+    return adv_evt_type;
+  }
+
   /* Clear data for device |addr_type, addr| */
   void Clear(uint8_t addr_type, const RawAddress& addr) {
     auto it = Find(addr_type, addr);
@@ -116,6 +134,7 @@ class AdvertisingCache {
  private:
   struct Item {
     uint8_t addr_type;
+    uint16_t adv_evt_type;
     RawAddress addr;
     std::vector<uint8_t> data;
 
@@ -1857,7 +1876,7 @@ void btm_ble_process_adv_pkt(uint8_t data_len, uint8_t* data) {
   uint8_t* p = data;
   uint8_t legacy_evt_type, addr_type, num_reports, pkt_data_len;
   int8_t rssi;
-  BTM_TRACE_ERROR("btm_ble_process_adv_pkt 1111");
+  BTM_TRACE_ERROR("btm_ble_process_adv_pkt 1111 22");
   /* Only process the results if the inquiry is still active */
   if (!BTM_BLE_IS_SCAN_ACTIVE(btm_cb.ble_ctr_cb.scan_activity)) return;
 
@@ -1895,6 +1914,7 @@ void btm_ble_process_adv_pkt(uint8_t data_len, uint8_t* data) {
 
     uint16_t event_type;
     event_type = 1 << BLE_EVT_LEGACY_BIT;
+    BTM_TRACE_ERROR("btm_ble_process_adv_pkt 1111 event_type = %d", event_type);
     if (legacy_evt_type == BTM_BLE_ADV_IND_EVT) {
       event_type |= (1 << BLE_EVT_CONNECTABLE_BIT)|
                     (1 << BLE_EVT_SCANNABLE_BIT);
@@ -1908,7 +1928,7 @@ void btm_ble_process_adv_pkt(uint8_t data_len, uint8_t* data) {
     } else if (legacy_evt_type == BTM_BLE_SCAN_RSP_EVT) {  // SCAN_RSP;
       // We can't distinguish between "SCAN_RSP to an ADV_IND", and "SCAN_RSP to
       // an ADV_SCAN_IND", so always return "SCAN_RSP to an ADV_IND"
-      event_type |= (1 << BLE_EVT_CONNECTABLE_BIT)|
+      event_type |= (1 << BLE_EVT_LEGACY_BIT)|
                     (1 << BLE_EVT_SCANNABLE_BIT)|
                     (1 << BLE_EVT_SCAN_RESPONSE_BIT);
     } else {
@@ -1918,7 +1938,7 @@ void btm_ble_process_adv_pkt(uint8_t data_len, uint8_t* data) {
           legacy_evt_type);
       return;
     }
-
+    BTM_TRACE_ERROR("btm_ble_process_adv_pkt 2222 event_type = %d", event_type);
     btm_ble_process_adv_pkt_cont(
         event_type, addr_type, bda, PHY_LE_1M, PHY_LE_NO_PACKET, NO_ADI_PRESENT,
         TX_POWER_NOT_PRESENT, rssi, 0x00 /* no periodic adv */, pkt_data_len,
@@ -1939,6 +1959,7 @@ void btm_ble_process_adv_pkt_cont(uint16_t evt_type, uint8_t addr_type,
   tBTM_INQUIRY_VAR_ST* p_inq = &btm_cb.btm_inq_vars;
   bool update = true;
 
+  LOG(ERROR) << __func__ << " bda = " << bda.ToString() << "evt_type = " << evt_type;
   std::vector<uint8_t> tmp;
   if (data_len != 0) tmp.insert(tmp.begin(), data, data + data_len);
 
@@ -1958,6 +1979,9 @@ void btm_ble_process_adv_pkt_cont(uint16_t evt_type, uint8_t addr_type,
       is_start ? cache.Set(addr_type, bda, std::move(tmp))
                : cache.Append(addr_type, bda, std::move(tmp));
 
+  evt_type =  is_start ? cache.SetAdvEvtType(addr_type, bda, evt_type)
+                : cache.UpdateAdvEvtType(addr_type, bda, evt_type);
+
   bool data_complete = (ble_evt_type_data_status(evt_type) != 0x01);
 
   if (!data_complete) {
@@ -1966,12 +1990,17 @@ void btm_ble_process_adv_pkt_cont(uint16_t evt_type, uint8_t addr_type,
     return;
   }
 
+  
+  if(is_scan_resp) {
+    evt_type =  cache.UpdateAdvEvtType(addr_type, bda, evt_type);
+  }
+
   bool is_active_scan =
       btm_cb.ble_ctr_cb.inq_var.scan_type == BTM_BLE_SCAN_MODE_ACTI;
   if (is_active_scan && is_scannable && !is_scan_resp) {
     // If we didn't receive scan response yet, don't report the device.
     LOG(ERROR) << " Waiting for scan response " << bda;
-    //return;
+    return;
   }
 
   if (!AdvertiseDataParser::IsValid(adv_data)) {
@@ -2011,7 +2040,7 @@ void btm_ble_process_adv_pkt_cont(uint16_t evt_type, uint8_t addr_type,
     p_i->time_of_resp = bluetooth::common::time_get_os_boottime_ms();
     p_inq->inq_cmpl_info.num_resp++;
   }
-
+  LOG(ERROR) << __func__ << "111 bda = " << bda.ToString() << "evt_type = " << evt_type;
   /* update the LE device information in inquiry database */
   btm_ble_update_inq_result(p_i, addr_type, bda, evt_type, primary_phy,
                             secondary_phy, advertising_sid, tx_power, rssi,
