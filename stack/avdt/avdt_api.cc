@@ -261,28 +261,29 @@ uint16_t AVDT_RemoveStream(uint8_t handle) {
 uint16_t AVDT_DiscoverReq(const RawAddress& bd_addr, uint8_t channel_index,
                           tAVDT_SEP_INFO* p_sep_info, uint8_t max_seps,
                           tAVDT_CTRL_CBACK* p_cback) {
-  AvdtpCcb* p_ccb;
-  uint16_t result = AVDT_SUCCESS;
-  tAVDT_CCB_EVT evt;
+  //AvdtpCcb* p_ccb;
+  //uint16_t result = AVDT_SUCCESS;
+  //tAVDT_CCB_EVT evt;
 
-  AVDT_TRACE_DEBUG("%s", __func__);
-
-  /* find channel control block for this bd addr; if none, allocate one */
+  AVDT_TRACE_ERROR("%s 111 ", __func__);
+  return -1;
+  /*
+  // find channel control block for this bd addr; if none, allocate one
   p_ccb = avdt_ccb_by_bd(bd_addr);
   if (p_ccb == NULL) {
     p_ccb = avdt_ccb_alloc_by_channel_index(bd_addr, channel_index);
     if (p_ccb == NULL) {
-      /* could not allocate channel control block */
+      // could not allocate channel control block
       result = AVDT_NO_RESOURCES;
     }
   }
 
   if (result == AVDT_SUCCESS) {
-    /* make sure no discovery or get capabilities req already in progress */
+    // make sure no discovery or get capabilities req already in progress
     if (p_ccb->proc_busy) {
       result = AVDT_BUSY;
     }
-    /* send event to ccb */
+    // send event to ccb 
     else {
       evt.discover.p_sep_info = p_sep_info;
       evt.discover.num_seps = max_seps;
@@ -295,7 +296,7 @@ uint16_t AVDT_DiscoverReq(const RawAddress& bd_addr, uint8_t channel_index,
     AVDT_TRACE_ERROR("%s: result=%d address=%s", __func__, result,
                      bd_addr.ToString().c_str());
   }
-  return result;
+  return result; */
 }
 
 /*******************************************************************************
