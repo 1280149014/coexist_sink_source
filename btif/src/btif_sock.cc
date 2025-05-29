@@ -140,7 +140,7 @@ void btif_obex_upstreams_evt(uint16_t event, char* p_param) {
       LOG_ERROR(LOG_TAG, "%s event %d , uuid", __func__, event);
       //do_in_jni_thread(FROM_HERE, base::Bind(bt_hal_cbacks->socket_connect_changed_cb,
       //                      bda, uuid, state));
-        HAL_CBACK(bt_hal_cbacks, socket_connect_changed_cb, &bda, uuid, state);
+      //  HAL_CBACK(bt_hal_cbacks, socket_connect_changed_cb, &bda, uuid, state);
       break;
     default:
       LOG_ERROR(LOG_TAG, "%s unknown event %d", __func__, event);

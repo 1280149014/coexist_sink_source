@@ -439,7 +439,7 @@ typedef struct {
   dut_mode_recv_callback dut_mode_recv_cb;
   le_test_mode_callback le_test_mode_cb;
   energy_info_callback energy_info_cb;
-  socket_connect_changed_callback socket_connect_changed_cb;
+//  socket_connect_changed_callback socket_connect_changed_cb;
 } bt_callbacks_t;
 
 typedef void (*alarm_cb)(void* data);
