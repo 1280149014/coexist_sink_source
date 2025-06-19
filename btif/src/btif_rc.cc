@@ -3341,7 +3341,7 @@ static void handle_get_capability_response(tBTA_AV_META_MSG* pmeta_msg,
       btif_rc_get_device_by_handle(pmeta_msg->rc_handle);
   if (p_dev == NULL) {
     BTIF_TRACE_ERROR("%s: ylq 111111111111 Device not found", __func__);
-    return;
+    //return;
   }
 
   /* Todo: Do we need to retry on command timeout */

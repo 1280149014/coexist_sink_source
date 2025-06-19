@@ -1463,11 +1463,9 @@ bool A2DP_InitCodecConfig(btav_a2dp_codec_index_t codec_index,
     case BTAV_A2DP_CODEC_INDEX_SINK_SBC:
       return A2DP_InitCodecConfigSbcSink(p_cfg);
     case BTAV_A2DP_CODEC_INDEX_SOURCE_AAC:
-      //return A2DP_InitCodecConfigAac(p_cfg);
-      return  false;
+      return A2DP_InitCodecConfigAac(p_cfg);
     case BTAV_A2DP_CODEC_INDEX_SINK_AAC:
-      //return A2DP_InitCodecConfigAacSink(p_cfg);
-      return  false;
+      return A2DP_InitCodecConfigAacSink(p_cfg);
     default:
       break;
   }
