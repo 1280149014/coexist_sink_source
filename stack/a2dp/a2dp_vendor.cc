@@ -617,13 +617,17 @@ bool A2DP_VendorInitCodecConfig(btav_a2dp_codec_index_t codec_index,
     case BTAV_A2DP_CODEC_INDEX_SINK_AAC:
       break;  // These are not vendor-specific codecs
     case BTAV_A2DP_CODEC_INDEX_SOURCE_APTX:
-      return A2DP_VendorInitCodecConfigAptx(p_cfg);
+      //return A2DP_VendorInitCodecConfigAptx(p_cfg);
+      return false;
     case BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_HD:
-      return A2DP_VendorInitCodecConfigAptxHd(p_cfg);
+      //return A2DP_VendorInitCodecConfigAptxHd(p_cfg);
+      return false;
     case BTAV_A2DP_CODEC_INDEX_SOURCE_LDAC:
-      return A2DP_VendorInitCodecConfigLdac(p_cfg);
+      //return A2DP_VendorInitCodecConfigLdac(p_cfg);
+      return false;
     case BTAV_A2DP_CODEC_INDEX_SINK_LDAC:
-      return A2DP_VendorInitCodecConfigLdacSink(p_cfg);
+      //return A2DP_VendorInitCodecConfigLdacSink(p_cfg);
+      return false;
     // Add a switch statement for each vendor-specific codec
     case BTAV_A2DP_CODEC_INDEX_MAX:
       break;
